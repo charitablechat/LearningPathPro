@@ -1,0 +1,211 @@
+import { useState, FormEvent } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { Input } from '../components/Input';
+import { Button } from '../components/Button';
+
+export function LoginPage() {
+  const { signIn } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [showSignUp, setShowSignUp] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccessMessage('');
+    setLoading(true);
+
+    try {
+      await signIn(email, password);
+    } catch (err: any) {
+      if (err.message === 'EMAIL_NOT_CONFIRMED') {
+        setError('Please check your email and confirm your account before signing in. Check your spam folder if you don\'t see the email.');
+      } else if (err.message.includes('Invalid login credentials')) {
+        setError('Invalid email or password. Please try again.');
+      } else {
+        setError(err.message || 'Failed to sign in');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignUpSuccess = () => {
+    setShowSignUp(false);
+    setSuccessMessage('Account created! Please check your email to confirm your account before signing in.');
+  };
+
+  if (showSignUp) {
+    return <SignUpPage onBackToLogin={() => setShowSignUp(false)} onSuccess={handleSignUpSuccess} />;
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-50 to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4 transition-colors">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center mb-4">
+            <img src="/Untitled design (20).png" alt="Boys Ranch" className="h-24" />
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Welcome to Boys Ranch Learning</h1>
+          <p className="text-gray-600 dark:text-gray-400">Sign in to continue your learning journey</p>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 border border-gray-200 dark:border-gray-700">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+              <div className="p-4 bg-red-100 dark:bg-red-900/50 border border-red-300 dark:border-red-700 rounded-lg text-red-700 dark:text-red-200 text-sm">
+                {error}
+              </div>
+            )}
+
+            {successMessage && (
+              <div className="p-4 bg-green-100 dark:bg-green-900/50 border border-green-300 dark:border-green-700 rounded-lg text-green-700 dark:text-green-200 text-sm">
+                {successMessage}
+              </div>
+            )}
+
+            <Input
+              label="Email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your email"
+              required
+            />
+
+            <Input
+              label="Password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password"
+              required
+            />
+
+            <Button type="submit" fullWidth disabled={loading}>
+              {loading ? 'Signing in...' : 'Sign In'}
+            </Button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <p className="text-gray-600 dark:text-gray-400 text-sm">
+              Don't have an account?{' '}
+              <button
+                type="button"
+                onClick={() => setShowSignUp(true)}
+                className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors"
+              >
+                Sign up
+              </button>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SignUpPage({ onBackToLogin, onSuccess }: { onBackToLogin: () => void; onSuccess: () => void }) {
+  const { signUp } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      await signUp(email, password, fullName);
+      onSuccess();
+    } catch (err: any) {
+      if (err.message === 'CONFIRMATION_REQUIRED') {
+        onSuccess();
+      } else if (err.message.includes('User already registered')) {
+        setError('An account with this email already exists. Please sign in instead.');
+      } else {
+        setError(err.message || 'Failed to sign up');
+      }
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-50 to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4 transition-colors">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center mb-4">
+            <img src="/Untitled design (20).png" alt="Boys Ranch" className="h-24" />
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Join Boys Ranch Learning</h1>
+          <p className="text-gray-600 dark:text-gray-400">Create your account and start learning</p>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 border border-gray-200 dark:border-gray-700">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+              <div className="p-4 bg-red-100 dark:bg-red-900/50 border border-red-300 dark:border-red-700 rounded-lg text-red-700 dark:text-red-200 text-sm">
+                {error}
+              </div>
+            )}
+
+            <div className="p-4 bg-blue-100 dark:bg-blue-900/50 border border-blue-300 dark:border-blue-700 rounded-lg text-blue-700 dark:text-blue-200 text-sm">
+              You will receive a confirmation email after signing up. Please check your email and confirm your account before signing in.
+            </div>
+
+            <Input
+              label="Full Name"
+              type="text"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              placeholder="Enter your full name"
+              required
+            />
+
+            <Input
+              label="Email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your email"
+              required
+            />
+
+            <Input
+              label="Password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Create a password"
+              required
+              helperText="Minimum 6 characters"
+            />
+
+            <Button type="submit" fullWidth disabled={loading}>
+              {loading ? 'Creating account...' : 'Sign Up'}
+            </Button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <p className="text-gray-600 dark:text-gray-400 text-sm">
+              Already have an account?{' '}
+              <button
+                type="button"
+                onClick={onBackToLogin}
+                className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors"
+              >
+                Sign in
+              </button>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
