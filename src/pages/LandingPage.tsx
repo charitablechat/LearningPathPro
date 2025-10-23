@@ -7,9 +7,9 @@ export function LandingPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <nav className="border-b border-slate-700 bg-slate-900/50 backdrop-blur-lg sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <GraduationCap className="w-8 h-8 text-blue-500" />
-            <span className="text-xl font-bold text-white">ClearCourseStudio</span>
+          <div className="flex items-center space-x-3">
+            <img src="/Clear Course Studio.png" alt="Clear Course Studio" className="h-10" />
+            <span className="text-xl font-bold text-white">Clear Course Studio</span>
           </div>
           <div className="flex items-center space-x-6">
             <a href="/pricing" className="text-slate-300 hover:text-white transition-colors">
@@ -168,8 +168,8 @@ export function LandingPage() {
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <GraduationCap className="w-6 h-6 text-blue-500" />
-                <span className="text-lg font-bold text-white">ClearCourseStudio</span>
+                <img src="/Clear Course Studio.png" alt="Clear Course Studio" className="h-8" />
+                <span className="text-lg font-bold text-white">Clear Course Studio</span>
               </div>
               <p className="text-slate-400 text-sm">
                 Modern learning management platform for educators and organizations.
@@ -203,7 +203,7 @@ export function LandingPage() {
           </div>
 
           <div className="border-t border-slate-800 mt-12 pt-8 text-center text-slate-400 text-sm">
-            © 2025 ClearCourseStudio. All rights reserved.
+            © 2025 Clear Course Studio. All rights reserved.
           </div>
         </div>
       </footer>
