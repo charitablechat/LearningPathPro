@@ -1,10 +1,12 @@
 import { ButtonHTMLAttributes, ReactNode } from 'react';
+import { navigateTo } from '../lib/router';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
   variant?: 'primary' | 'secondary' | 'outline' | 'danger';
   size?: 'sm' | 'md' | 'lg';
   fullWidth?: boolean;
+  href?: string;
 }
 
 export function Button({
@@ -14,9 +16,11 @@ export function Button({
   fullWidth = false,
   className = '',
   disabled,
+  href,
+  onClick,
   ...props
 }: ButtonProps) {
-  const baseStyles = 'font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
+  const baseStyles = 'font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center';
 
   const variants = {
     primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
@@ -33,10 +37,20 @@ export function Button({
 
   const widthClass = fullWidth ? 'w-full' : '';
 
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (href) {
+      e.preventDefault();
+      navigateTo(href);
+    } else if (onClick) {
+      onClick(e);
+    }
+  };
+
   return (
     <button
       className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${widthClass} ${className}`}
       disabled={disabled}
+      onClick={handleClick}
       {...props}
     >
       {children}

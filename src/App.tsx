@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth, AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { OrganizationProvider } from './contexts/OrganizationContext';
 import { Navbar } from './components/Navbar';
 import { LoginPage } from './pages/LoginPage';
 import { LearnerDashboard } from './pages/LearnerDashboard';
@@ -8,11 +9,26 @@ import { InstructorDashboard } from './pages/InstructorDashboard';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { ProfilePage } from './pages/ProfilePage';
 import { CourseViewerPage } from './pages/CourseViewerPage';
+import { LandingPage } from './pages/LandingPage';
+import { PricingPage } from './pages/PricingPage';
+import { OrganizationSignupPage } from './pages/OrganizationSignupPage';
+import { OrganizationSettingsPage } from './pages/OrganizationSettingsPage';
+import { SuperAdminDashboard } from './pages/SuperAdminDashboard';
+import { getPath, navigateTo } from './lib/router';
 
 function AppContent() {
   const { user, profile, loading } = useAuth();
-  const [showProfile, setShowProfile] = useState(false);
+  const [currentPath, setCurrentPath] = useState(getPath());
   const [viewingCourse, setViewingCourse] = useState<{ id: string; name: string } | null>(null);
+
+  useEffect(() => {
+    const handleRouteChange = () => {
+      setCurrentPath(getPath());
+    };
+
+    window.addEventListener('popstate', handleRouteChange);
+    return () => window.removeEventListener('popstate', handleRouteChange);
+  }, []);
 
   if (loading) {
     return (
@@ -22,14 +38,59 @@ function AppContent() {
     );
   }
 
+  const publicRoutes = ['/', '/pricing', '/login', '/signup'];
+  const isPublicRoute = publicRoutes.includes(currentPath);
+
+  if (!user && !isPublicRoute) {
+    return <LoginPage />;
+  }
+
+  if (user && !profile?.organization_id && currentPath !== '/organization/signup' && currentPath !== '/login') {
+    return <OrganizationSignupPage />;
+  }
+
+  if (currentPath === '/' && !user) {
+    return <LandingPage />;
+  }
+
+  if (currentPath === '/pricing') {
+    return <PricingPage />;
+  }
+
+  if (currentPath === '/login' || currentPath === '/signup') {
+    return <LoginPage />;
+  }
+
+  if (currentPath === '/organization/signup') {
+    return <OrganizationSignupPage />;
+  }
+
   if (!user || !profile) {
     return <LoginPage />;
+  }
+
+  if (profile.is_super_admin && currentPath === '/super-admin') {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+        <Navbar onProfileClick={() => navigateTo('/profile')} />
+        <SuperAdminDashboard />
+      </div>
+    );
+  }
+
+  if (currentPath === '/settings') {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+        <Navbar onProfileClick={() => navigateTo('/profile')} />
+        <OrganizationSettingsPage />
+      </div>
+    );
   }
 
   if (viewingCourse) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
-        <Navbar onProfileClick={() => setShowProfile(true)} />
+        <Navbar onProfileClick={() => navigateTo('/profile')} />
         <CourseViewerPage
           courseId={viewingCourse.id}
           courseName={viewingCourse.name}
@@ -39,18 +100,18 @@ function AppContent() {
     );
   }
 
-  if (showProfile) {
+  if (currentPath === '/profile') {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
-        <Navbar onProfileClick={() => setShowProfile(false)} />
-        <ProfilePage onBack={() => setShowProfile(false)} />
+        <Navbar onProfileClick={() => navigateTo('/dashboard')} />
+        <ProfilePage onBack={() => navigateTo('/dashboard')} />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
-      <Navbar onProfileClick={() => setShowProfile(true)} />
+      <Navbar onProfileClick={() => navigateTo('/profile')} />
       {profile.role === 'learner' && <LearnerDashboard />}
       {profile.role === 'instructor' && <InstructorDashboard onViewCourse={setViewingCourse} />}
       {profile.role === 'admin' && <AdminDashboard onViewCourse={setViewingCourse} />}
@@ -61,9 +122,11 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <ThemeProvider>
-        <AppContent />
-      </ThemeProvider>
+      <OrganizationProvider>
+        <ThemeProvider>
+          <AppContent />
+        </ThemeProvider>
+      </OrganizationProvider>
     </AuthProvider>
   );
 }
