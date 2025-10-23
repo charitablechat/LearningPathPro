@@ -14,6 +14,7 @@ import { PricingPage } from './pages/PricingPage';
 import { OrganizationSignupPage } from './pages/OrganizationSignupPage';
 import { OrganizationSettingsPage } from './pages/OrganizationSettingsPage';
 import { SuperAdminDashboard } from './pages/SuperAdminDashboard';
+import { SubscribePage } from './pages/SubscribePage';
 import { getPath, navigateTo } from './lib/router';
 
 function AppContent() {
@@ -55,6 +56,10 @@ function AppContent() {
 
   if (currentPath === '/pricing') {
     return <PricingPage />;
+  }
+
+  if (currentPath === '/subscribe') {
+    return <SubscribePage />;
   }
 
   if (currentPath === '/login' || currentPath === '/signup') {
