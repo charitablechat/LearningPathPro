@@ -61,22 +61,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     console.log('[AUTH] loadProfile called for userId:', userId);
 
     const timeoutId = setTimeout(() => {
-      console.error('[AUTH] Profile loading timeout after 10 seconds - FORCING LOADING TO FALSE');
+      console.error('[AUTH] Profile loading timeout after 10 seconds');
       setLoading(false);
     }, 10000);
 
     try {
       console.log('[AUTH] Fetching profile from database...');
-      const startTime = Date.now();
-
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .maybeSingle();
-
-      const endTime = Date.now();
-      console.log(`[AUTH] Query completed in ${endTime - startTime}ms`);
 
       clearTimeout(timeoutId);
 
@@ -87,9 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           details: error.details,
           hint: error.hint,
         });
-        setProfile(null);
-        setLoading(false);
-        return;
+        throw error;
       }
 
       console.log('[AUTH] Profile loaded successfully:', data ? 'Profile found' : 'No profile');
@@ -98,7 +91,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error: any) {
       console.error('[AUTH] Exception in loadProfile:', error);
       clearTimeout(timeoutId);
-      setProfile(null);
     } finally {
       console.log('[AUTH] Setting loading to false');
       setLoading(false);
