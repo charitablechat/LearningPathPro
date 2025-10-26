@@ -23,21 +23,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('[AUTH] Initializing auth context...');
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('[AUTH] Session retrieved:', session ? 'User logged in' : 'No user');
       setUser(session?.user ?? null);
       if (session?.user) {
+        console.log('[AUTH] Loading profile for user:', session.user.id);
         loadProfile(session.user.id);
       } else {
+        console.log('[AUTH] No session, setting loading to false');
         setLoading(false);
       }
+    }).catch(error => {
+      console.error('[AUTH] Error getting session:', error);
+      setLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       (() => {
+        console.log('[AUTH] Auth state changed:', _event);
         setUser(session?.user ?? null);
         if (session?.user) {
+          console.log('[AUTH] User logged in, loading profile:', session.user.id);
           loadProfile(session.user.id);
         } else {
+          console.log('[AUTH] User logged out');
           setProfile(null);
           setLoading(false);
         }
@@ -48,18 +58,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const loadProfile = async (userId: string) => {
+    console.log('[AUTH] loadProfile called for userId:', userId);
+
+    const timeoutId = setTimeout(() => {
+      console.error('[AUTH] Profile loading timeout after 10 seconds');
+      setLoading(false);
+    }, 10000);
+
     try {
+      console.log('[AUTH] Fetching profile from database...');
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .maybeSingle();
 
-      if (error) throw error;
+      clearTimeout(timeoutId);
+
+      if (error) {
+        console.error('[AUTH] Error loading profile:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+        });
+        throw error;
+      }
+
+      console.log('[AUTH] Profile loaded successfully:', data ? 'Profile found' : 'No profile');
+      console.log('[AUTH] Profile data:', data);
       setProfile(data);
-    } catch (error) {
-      console.error('Error loading profile:', error);
+    } catch (error: any) {
+      console.error('[AUTH] Exception in loadProfile:', error);
+      clearTimeout(timeoutId);
     } finally {
+      console.log('[AUTH] Setting loading to false');
       setLoading(false);
     }
   };
