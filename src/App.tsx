@@ -51,7 +51,10 @@ function AppContent() {
     return <LoginPage />;
   }
 
-  if (user && !profile?.organization_id && currentPath !== '/organization/signup' && currentPath !== '/login' && !profile?.is_super_admin) {
+  if (user && profile && !profile.organization_id && currentPath !== '/organization/signup' && currentPath !== '/login' && !profile.is_super_admin) {
+    if (currentPath !== '/organization/signup') {
+      navigateTo('/organization/signup');
+    }
     return <OrganizationSignupPage />;
   }
 
@@ -59,8 +62,10 @@ function AppContent() {
     return <LandingPage />;
   }
 
-  if (currentPath === '/' && user && profile?.organization_id) {
-    navigateTo('/dashboard');
+  if (currentPath === '/' && user && profile && profile.organization_id) {
+    if (currentPath !== '/dashboard') {
+      navigateTo('/dashboard');
+    }
     return null;
   }
 
@@ -84,8 +89,16 @@ function AppContent() {
     return <OrganizationSignupPage />;
   }
 
-  if (!user || !profile) {
+  if (!user) {
     return <LoginPage />;
+  }
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center transition-colors">
+        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
   }
 
   if (profile.is_super_admin && currentPath === '/super-admin') {

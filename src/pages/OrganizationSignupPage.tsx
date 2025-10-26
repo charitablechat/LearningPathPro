@@ -118,14 +118,32 @@ export function OrganizationSignupPage() {
 
       await refetchProfile();
 
-      await new Promise(resolve => setTimeout(resolve, 500));
+      let retryCount = 0;
+      const maxRetries = 10;
+      while (retryCount < maxRetries) {
+        const { data: updatedProfile } = await supabase
+          .from('profiles')
+          .select('organization_id, role')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (updatedProfile?.organization_id === org.id && updatedProfile?.role === 'admin') {
+          break;
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 300));
+        retryCount++;
+      }
 
       showToast('Organization created successfully!', 'success');
+
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       navigateTo('/dashboard');
     } catch (error) {
       console.error('Error creating organization:', error);
       showToast('An unexpected error occurred. Please try again.', 'error');
+    } finally {
       setLoading(false);
     }
   };
