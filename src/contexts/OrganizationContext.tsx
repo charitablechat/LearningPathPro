@@ -29,12 +29,19 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
     }
 
     setLoading(true);
-    const org = await getOrganization(profile.organization_id);
-    setOrganization(org);
-    setLoading(false);
+    try {
+      const org = await getOrganization(profile.organization_id);
+      setOrganization(org);
+    } catch (error) {
+      console.error('[ORG_CONTEXT] Error fetching organization:', error);
+      setOrganization(null);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
+    console.log('[ORG_CONTEXT] Effect triggered, profile?.organization_id:', profile?.organization_id);
     fetchOrganization();
   }, [profile?.organization_id]);
 
