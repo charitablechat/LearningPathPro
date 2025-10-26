@@ -56,8 +56,11 @@ function AppContent() {
   }
 
   if (user && profile && !profile.organization_id && currentPath !== '/organization/signup' && currentPath !== '/login' && !profile.is_super_admin) {
+    console.log('[APP] User has no organization, redirecting to signup if not already there');
     if (currentPath !== '/organization/signup') {
+      console.log('[APP] Navigating to /organization/signup');
       navigateTo('/organization/signup');
+      return null;
     }
     return <OrganizationSignupPage />;
   }
@@ -67,9 +70,8 @@ function AppContent() {
   }
 
   if (currentPath === '/' && user && profile && profile.organization_id) {
-    if (currentPath !== '/dashboard') {
-      navigateTo('/dashboard');
-    }
+    console.log('[APP] User on root with organization, redirecting to dashboard');
+    navigateTo('/dashboard');
     return null;
   }
 

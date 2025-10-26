@@ -57,13 +57,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const loadProfile = async (userId: string) => {
-    console.log('[AUTH] loadProfile called for userId:', userId);
+  const loadProfile = async (userId: string, skipLoadingState = false) => {
+    console.log('[AUTH] loadProfile called for userId:', userId, 'skipLoadingState:', skipLoadingState);
 
-    const timeoutId = setTimeout(() => {
-      console.error('[AUTH] Profile loading timeout after 10 seconds - FORCING LOADING TO FALSE');
-      setLoading(false);
-    }, 10000);
+    if (!skipLoadingState) {
+      setLoading(true);
+    }
 
     try {
       console.log('[AUTH] Fetching profile from database...');
@@ -78,8 +77,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const endTime = Date.now();
       console.log(`[AUTH] Query completed in ${endTime - startTime}ms`);
 
-      clearTimeout(timeoutId);
-
       if (error) {
         console.error('[AUTH] Error loading profile:', {
           code: error.code,
@@ -88,20 +85,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           hint: error.hint,
         });
         setProfile(null);
-        setLoading(false);
-        return;
+        if (!skipLoadingState) {
+          setLoading(false);
+        }
+        return null;
       }
 
       console.log('[AUTH] Profile loaded successfully:', data ? 'Profile found' : 'No profile');
       console.log('[AUTH] Profile data:', data);
       setProfile(data);
+      if (!skipLoadingState) {
+        setLoading(false);
+      }
+      return data;
     } catch (error: any) {
       console.error('[AUTH] Exception in loadProfile:', error);
-      clearTimeout(timeoutId);
       setProfile(null);
-    } finally {
-      console.log('[AUTH] Setting loading to false');
-      setLoading(false);
+      if (!skipLoadingState) {
+        setLoading(false);
+      }
+      return null;
     }
   };
 
@@ -200,8 +203,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refetchProfile = async () => {
     if (user) {
-      await loadProfile(user.id);
+      console.log('[AUTH] refetchProfile: Starting profile refetch for user:', user.id);
+      const profile = await loadProfile(user.id, true);
+      console.log('[AUTH] refetchProfile: Profile refetch completed, profile:', profile);
+      return profile;
     }
+    return null;
   };
 
   return (

@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { createOrganization, slugify, validatePromoCode, redeemPromoCode } from '../lib/organization';
 import { supabase } from '../lib/supabase';
-import { navigateTo } from '../lib/router';
+import { navigateTo, getPath } from '../lib/router';
 import { Card } from '../components/Card';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
@@ -10,8 +10,8 @@ import { useToast } from '../hooks/useToast';
 import { Building2, ArrowRight, Tag, Check } from 'lucide-react';
 
 export function OrganizationSignupPage() {
-  const { user, profile, refetchProfile } = useAuth();
-  const { showToast } = useToast();
+  const { user, refetchProfile } = useAuth();
+  const { success: showSuccess, error: showError } = useToast();
   const [step, setStep] = useState(1);
   const [organizationName, setOrganizationName] = useState('');
   const [organizationSlug, setOrganizationSlug] = useState('');
@@ -20,17 +20,8 @@ export function OrganizationSignupPage() {
   const [secondaryColor, setSecondaryColor] = useState('#1E40AF');
   const [loading, setLoading] = useState(false);
   const [validatedPromo, setValidatedPromo] = useState<any>(null);
-  const [createdOrgId, setCreatedOrgId] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (createdOrgId && profile?.organization_id === createdOrgId && profile?.role === 'admin') {
-      console.log('[ORG CREATION] Profile state updated with organization_id, navigating to dashboard...');
-      showToast('Organization created successfully!', 'success');
-      setTimeout(() => {
-        navigateTo('/dashboard');
-      }, 500);
-    }
-  }, [profile?.organization_id, profile?.role, createdOrgId]);
+  const [loadingMessage, setLoadingMessage] = useState('Creating...');
+  const [showFallbackButton, setShowFallbackButton] = useState(false);
 
   const handleNameChange = (name: string) => {
     setOrganizationName(name);
@@ -39,7 +30,7 @@ export function OrganizationSignupPage() {
 
   const handleValidatePromo = async () => {
     if (!promoCode.trim()) {
-      showToast('Please enter a promo code', 'error');
+      showError('Please enter a promo code');
       return;
     }
 
@@ -48,26 +39,27 @@ export function OrganizationSignupPage() {
     setLoading(false);
 
     if (!promo) {
-      showToast('Invalid or expired promo code', 'error');
+      showError('Invalid or expired promo code');
       return;
     }
 
     setValidatedPromo(promo);
-    showToast('Promo code applied successfully!', 'success');
+    showSuccess('Promo code applied successfully!');
   };
 
   const handleCreateOrganization = async () => {
     if (!organizationName.trim() || !organizationSlug.trim()) {
-      showToast('Please fill in all required fields', 'error');
+      showError('Please fill in all required fields');
       return;
     }
 
     if (!user) {
-      showToast('You must be logged in to create an organization', 'error');
+      showError('You must be logged in to create an organization');
       return;
     }
 
     setLoading(true);
+    setLoadingMessage('Creating organization...');
     console.log('[ORG CREATION] Starting organization creation process...');
     console.log('[ORG CREATION] User ID:', user.id);
     console.log('[ORG CREATION] Org Name:', organizationName);
@@ -83,14 +75,14 @@ export function OrganizationSignupPage() {
 
       if (checkError) {
         console.error('[ORG CREATION] Error checking slug:', checkError);
-        showToast(`Database error: ${checkError.message}`, 'error');
+        showError(`Database error: ${checkError.message}`);
         setLoading(false);
         return;
       }
 
       if (existingOrg) {
         console.log('[ORG CREATION] Slug already exists');
-        showToast('This organization name is already taken. Please choose another.', 'error');
+        showError('This organization name is already taken. Please choose another.');
         setLoading(false);
         return;
       }
@@ -106,13 +98,14 @@ export function OrganizationSignupPage() {
 
       if (!org) {
         console.error('[ORG CREATION] Organization creation returned null');
-        showToast('Failed to create organization. Please check console for details.', 'error');
+        showError('Failed to create organization. Please check console for details.');
         setLoading(false);
         return;
       }
 
       console.log('[ORG CREATION] Organization created successfully:', org.id);
 
+      setLoadingMessage('Setting up your profile...');
       console.log('[ORG CREATION] Step 3: Updating profile with organization_id and role...');
       const { data: updatedProfile, error: profileError } = await supabase
         .from('profiles')
@@ -126,7 +119,7 @@ export function OrganizationSignupPage() {
 
       if (profileError) {
         console.error('[ORG CREATION] Error updating profile:', profileError);
-        showToast(`Failed to link profile: ${profileError.message}`, 'error');
+        showError(`Failed to link profile: ${profileError.message}`);
         setLoading(false);
         return;
       }
@@ -134,6 +127,7 @@ export function OrganizationSignupPage() {
       console.log('[ORG CREATION] Profile updated successfully:', updatedProfile);
 
       if (validatedPromo && validatedPromo.type === 'lifetime_deal') {
+        setLoadingMessage('Activating promo code...');
         console.log('[ORG CREATION] Step 4: Redeeming promo code...');
         const redeemed = await redeemPromoCode(validatedPromo.id, org.id, user.id);
 
@@ -151,30 +145,62 @@ export function OrganizationSignupPage() {
             console.error('[ORG CREATION] Error updating org status:', updateError);
           } else {
             console.log('[ORG CREATION] Lifetime deal activated!');
-            showToast('Lifetime deal activated!', 'success');
           }
         }
       }
 
-      console.log('[ORG CREATION] Step 5: Refetching profile...');
-      await refetchProfile();
+      setLoadingMessage('Finalizing setup...');
+      console.log('[ORG CREATION] Step 5: Refetching profile to sync state...');
+      const refreshedProfile = await refetchProfile();
 
-      console.log('[ORG CREATION] Step 6: Setting created org ID to trigger navigation...');
-      setCreatedOrgId(org.id);
+      console.log('[ORG CREATION] Step 6: Profile refreshed, navigating to dashboard...');
 
-      console.log('[ORG CREATION] Waiting for profile state to update (useEffect will handle navigation)...');
+      if (refreshedProfile?.organization_id === org.id) {
+        console.log('[ORG CREATION] Profile confirmed with organization_id, navigating immediately...');
+        showSuccess('Organization created successfully!');
+
+        setTimeout(() => {
+          console.log('[ORG CREATION] Executing navigation to dashboard...');
+          navigateTo('/dashboard');
+          setLoading(false);
+        }, 300);
+
+        setTimeout(() => {
+          if (getPath() === '/organization/signup') {
+            console.warn('[ORG CREATION] Navigation may have failed, showing fallback button');
+            setShowFallbackButton(true);
+            setLoading(false);
+          }
+        }, 3000);
+      } else {
+        console.warn('[ORG CREATION] Profile refresh did not return expected organization_id, attempting navigation anyway...');
+        showSuccess('Organization created successfully!');
+
+        setTimeout(() => {
+          console.log('[ORG CREATION] Forcing navigation to dashboard...');
+          navigateTo('/dashboard');
+          setLoading(false);
+        }, 300);
+
+        setTimeout(() => {
+          if (getPath() === '/organization/signup') {
+            console.warn('[ORG CREATION] Navigation may have failed, showing fallback button');
+            setShowFallbackButton(true);
+            setLoading(false);
+          }
+        }, 3000);
+      }
     } catch (error: any) {
       console.error('[ORG CREATION] Unexpected error:', error);
-      showToast(`Error: ${error?.message || 'An unexpected error occurred'}`, 'error');
+      showError(`Error: ${error?.message || 'An unexpected error occurred'}`);
       setLoading(false);
-      setCreatedOrgId(null);
     }
   };
 
   const nextStep = () => {
     if (step === 1) {
       if (!organizationName.trim()) {
-        showToast('Please enter an organization name', 'error');
+        showError('Please enter an organization name');
         return;
       }
       setStep(2);
@@ -382,7 +408,7 @@ export function OrganizationSignupPage() {
           )}
 
           <div className="flex items-center justify-between mt-8 pt-6 border-t border-slate-700">
-            {step > 1 && (
+            {step > 1 && !showFallbackButton && (
               <Button variant="outline" onClick={() => setStep(step - 1)} disabled={loading}>
                 Back
               </Button>
@@ -392,9 +418,14 @@ export function OrganizationSignupPage() {
                 Next
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
+            ) : showFallbackButton ? (
+              <Button onClick={() => navigateTo('/dashboard')} className="w-full">
+                Continue to Dashboard
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
             ) : (
               <Button onClick={handleCreateOrganization} disabled={loading} className="ml-auto">
-                {loading ? (createdOrgId ? 'Setting up your organization...' : 'Creating...') : 'Create Organization'}
+                {loading ? loadingMessage : 'Create Organization'}
               </Button>
             )}
           </div>
