@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { createOrganization, slugify, validatePromoCode, redeemPromoCode } from '../lib/organization';
 import { supabase } from '../lib/supabase';
@@ -10,7 +10,7 @@ import { useToast } from '../hooks/useToast';
 import { Building2, ArrowRight, Tag, Check } from 'lucide-react';
 
 export function OrganizationSignupPage() {
-  const { user, refetchProfile } = useAuth();
+  const { user, profile, refetchProfile } = useAuth();
   const { showToast } = useToast();
   const [step, setStep] = useState(1);
   const [organizationName, setOrganizationName] = useState('');
@@ -20,6 +20,17 @@ export function OrganizationSignupPage() {
   const [secondaryColor, setSecondaryColor] = useState('#1E40AF');
   const [loading, setLoading] = useState(false);
   const [validatedPromo, setValidatedPromo] = useState<any>(null);
+  const [createdOrgId, setCreatedOrgId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (createdOrgId && profile?.organization_id === createdOrgId && profile?.role === 'admin') {
+      console.log('[ORG CREATION] Profile state updated with organization_id, navigating to dashboard...');
+      showToast('Organization created successfully!', 'success');
+      setTimeout(() => {
+        navigateTo('/dashboard');
+      }, 500);
+    }
+  }, [profile?.organization_id, profile?.role, createdOrgId]);
 
   const handleNameChange = (name: string) => {
     setOrganizationName(name);
@@ -148,47 +159,15 @@ export function OrganizationSignupPage() {
       console.log('[ORG CREATION] Step 5: Refetching profile...');
       await refetchProfile();
 
-      console.log('[ORG CREATION] Step 6: Waiting for profile sync...');
-      let retryCount = 0;
-      const maxRetries = 10;
-      while (retryCount < maxRetries) {
-        const { data: syncedProfile, error: syncError } = await supabase
-          .from('profiles')
-          .select('organization_id, role')
-          .eq('id', user.id)
-          .maybeSingle();
+      console.log('[ORG CREATION] Step 6: Setting created org ID to trigger navigation...');
+      setCreatedOrgId(org.id);
 
-        if (syncError) {
-          console.error('[ORG CREATION] Error checking profile sync:', syncError);
-        }
-
-        console.log(`[ORG CREATION] Retry ${retryCount + 1}/${maxRetries}:`, syncedProfile);
-
-        if (syncedProfile?.organization_id === org.id && syncedProfile?.role === 'admin') {
-          console.log('[ORG CREATION] Profile synced successfully!');
-          break;
-        }
-
-        await new Promise(resolve => setTimeout(resolve, 300));
-        retryCount++;
-      }
-
-      if (retryCount >= maxRetries) {
-        console.warn('[ORG CREATION] Profile sync timeout, but continuing anyway...');
-      }
-
-      console.log('[ORG CREATION] Step 7: Navigation to dashboard...');
-      showToast('Organization created successfully!', 'success');
-
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      console.log('[ORG CREATION] Navigating to dashboard...');
-      navigateTo('/dashboard');
+      console.log('[ORG CREATION] Waiting for profile state to update (useEffect will handle navigation)...');
     } catch (error: any) {
       console.error('[ORG CREATION] Unexpected error:', error);
       showToast(`Error: ${error?.message || 'An unexpected error occurred'}`, 'error');
-    } finally {
       setLoading(false);
+      setCreatedOrgId(null);
     }
   };
 
@@ -415,7 +394,7 @@ export function OrganizationSignupPage() {
               </Button>
             ) : (
               <Button onClick={handleCreateOrganization} disabled={loading} className="ml-auto">
-                {loading ? 'Creating...' : 'Create Organization'}
+                {loading ? (createdOrgId ? 'Setting up your organization...' : 'Creating...') : 'Create Organization'}
               </Button>
             )}
           </div>
