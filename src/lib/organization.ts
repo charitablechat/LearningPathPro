@@ -99,6 +99,14 @@ export async function createOrganization(params: {
   primary_color?: string;
   secondary_color?: string;
 }): Promise<Organization | null> {
+  console.log('[CREATE_ORG_LIB] Starting organization creation with params:', {
+    name: params.name,
+    slug: params.slug,
+    owner_id: params.owner_id,
+    primary_color: params.primary_color,
+    secondary_color: params.secondary_color,
+  });
+
   const { data, error } = await supabase
     .from('organizations')
     .insert({
@@ -114,10 +122,16 @@ export async function createOrganization(params: {
     .single();
 
   if (error) {
-    console.error('Error creating organization:', error);
+    console.error('[CREATE_ORG_LIB] Error creating organization:', {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
     return null;
   }
 
+  console.log('[CREATE_ORG_LIB] Organization created successfully:', data);
   return data;
 }
 

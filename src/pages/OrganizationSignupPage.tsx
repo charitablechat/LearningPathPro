@@ -57,20 +57,34 @@ export function OrganizationSignupPage() {
     }
 
     setLoading(true);
+    console.log('[ORG CREATION] Starting organization creation process...');
+    console.log('[ORG CREATION] User ID:', user.id);
+    console.log('[ORG CREATION] Org Name:', organizationName);
+    console.log('[ORG CREATION] Org Slug:', organizationSlug);
 
     try {
-      const { data: existingOrg } = await supabase
+      console.log('[ORG CREATION] Step 1: Checking if slug exists...');
+      const { data: existingOrg, error: checkError } = await supabase
         .from('organizations')
         .select('id')
         .eq('slug', organizationSlug)
         .maybeSingle();
 
+      if (checkError) {
+        console.error('[ORG CREATION] Error checking slug:', checkError);
+        showToast(`Database error: ${checkError.message}`, 'error');
+        setLoading(false);
+        return;
+      }
+
       if (existingOrg) {
+        console.log('[ORG CREATION] Slug already exists');
         showToast('This organization name is already taken. Please choose another.', 'error');
         setLoading(false);
         return;
       }
 
+      console.log('[ORG CREATION] Step 2: Creating organization...');
       const org = await createOrganization({
         name: organizationName,
         slug: organizationSlug,
@@ -80,31 +94,41 @@ export function OrganizationSignupPage() {
       });
 
       if (!org) {
-        showToast('Failed to create organization. Please try again.', 'error');
+        console.error('[ORG CREATION] Organization creation returned null');
+        showToast('Failed to create organization. Please check console for details.', 'error');
         setLoading(false);
         return;
       }
 
-      const { error: profileError } = await supabase
+      console.log('[ORG CREATION] Organization created successfully:', org.id);
+
+      console.log('[ORG CREATION] Step 3: Updating profile with organization_id and role...');
+      const { data: updatedProfile, error: profileError } = await supabase
         .from('profiles')
         .update({
           organization_id: org.id,
           role: 'admin',
         })
-        .eq('id', user.id);
+        .eq('id', user.id)
+        .select()
+        .single();
 
       if (profileError) {
-        console.error('Error updating profile:', profileError);
-        showToast('Failed to link profile to organization. Please try again.', 'error');
+        console.error('[ORG CREATION] Error updating profile:', profileError);
+        showToast(`Failed to link profile: ${profileError.message}`, 'error');
         setLoading(false);
         return;
       }
 
+      console.log('[ORG CREATION] Profile updated successfully:', updatedProfile);
+
       if (validatedPromo && validatedPromo.type === 'lifetime_deal') {
+        console.log('[ORG CREATION] Step 4: Redeeming promo code...');
         const redeemed = await redeemPromoCode(validatedPromo.id, org.id, user.id);
 
         if (redeemed) {
-          await supabase
+          console.log('[ORG CREATION] Promo code redeemed, updating organization status...');
+          const { error: updateError } = await supabase
             .from('organizations')
             .update({
               subscription_status: 'lifetime',
@@ -112,22 +136,36 @@ export function OrganizationSignupPage() {
             })
             .eq('id', org.id);
 
-          showToast('Lifetime deal activated!', 'success');
+          if (updateError) {
+            console.error('[ORG CREATION] Error updating org status:', updateError);
+          } else {
+            console.log('[ORG CREATION] Lifetime deal activated!');
+            showToast('Lifetime deal activated!', 'success');
+          }
         }
       }
 
+      console.log('[ORG CREATION] Step 5: Refetching profile...');
       await refetchProfile();
 
+      console.log('[ORG CREATION] Step 6: Waiting for profile sync...');
       let retryCount = 0;
       const maxRetries = 10;
       while (retryCount < maxRetries) {
-        const { data: updatedProfile } = await supabase
+        const { data: syncedProfile, error: syncError } = await supabase
           .from('profiles')
           .select('organization_id, role')
           .eq('id', user.id)
           .maybeSingle();
 
-        if (updatedProfile?.organization_id === org.id && updatedProfile?.role === 'admin') {
+        if (syncError) {
+          console.error('[ORG CREATION] Error checking profile sync:', syncError);
+        }
+
+        console.log(`[ORG CREATION] Retry ${retryCount + 1}/${maxRetries}:`, syncedProfile);
+
+        if (syncedProfile?.organization_id === org.id && syncedProfile?.role === 'admin') {
+          console.log('[ORG CREATION] Profile synced successfully!');
           break;
         }
 
@@ -135,14 +173,20 @@ export function OrganizationSignupPage() {
         retryCount++;
       }
 
+      if (retryCount >= maxRetries) {
+        console.warn('[ORG CREATION] Profile sync timeout, but continuing anyway...');
+      }
+
+      console.log('[ORG CREATION] Step 7: Navigation to dashboard...');
       showToast('Organization created successfully!', 'success');
 
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 500));
 
+      console.log('[ORG CREATION] Navigating to dashboard...');
       navigateTo('/dashboard');
-    } catch (error) {
-      console.error('Error creating organization:', error);
-      showToast('An unexpected error occurred. Please try again.', 'error');
+    } catch (error: any) {
+      console.error('[ORG CREATION] Unexpected error:', error);
+      showToast(`Error: ${error?.message || 'An unexpected error occurred'}`, 'error');
     } finally {
       setLoading(false);
     }
