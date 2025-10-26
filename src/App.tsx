@@ -15,6 +15,7 @@ import { OrganizationSignupPage } from './pages/OrganizationSignupPage';
 import { OrganizationSettingsPage } from './pages/OrganizationSettingsPage';
 import { SuperAdminDashboard } from './pages/SuperAdminDashboard';
 import { SubscribePage } from './pages/SubscribePage';
+import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { getPath, navigateTo } from './lib/router';
 
 function AppContent() {
@@ -39,7 +40,7 @@ function AppContent() {
     );
   }
 
-  const publicRoutes = ['/', '/pricing', '/login', '/signup'];
+  const publicRoutes = ['/', '/pricing', '/login', '/signup', '/reset-password'];
   const isPublicRoute = publicRoutes.includes(currentPath);
 
   if (!user && !isPublicRoute) {
@@ -64,6 +65,10 @@ function AppContent() {
 
   if (currentPath === '/login' || currentPath === '/signup') {
     return <LoginPage />;
+  }
+
+  if (currentPath === '/reset-password') {
+    return <ResetPasswordPage />;
   }
 
   if (currentPath === '/organization/signup') {

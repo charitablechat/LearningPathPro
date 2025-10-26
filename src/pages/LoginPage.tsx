@@ -4,12 +4,13 @@ import { Input } from '../components/Input';
 import { Button } from '../components/Button';
 
 export function LoginPage() {
-  const { signIn } = useAuth();
+  const { signIn, resetPassword } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showSignUp, setShowSignUp] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
   const handleSubmit = async (e: FormEvent) => {
@@ -40,6 +41,10 @@ export function LoginPage() {
 
   if (showSignUp) {
     return <SignUpPage onBackToLogin={() => setShowSignUp(false)} onSuccess={handleSignUpSuccess} />;
+  }
+
+  if (showForgotPassword) {
+    return <ForgotPasswordPage onBackToLogin={() => setShowForgotPassword(false)} />;
   }
 
   return (
@@ -76,14 +81,25 @@ export function LoginPage() {
               required
             />
 
-            <Input
-              label="Password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              required
-            />
+            <div>
+              <Input
+                label="Password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                required
+              />
+              <div className="mt-2 text-right">
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(true)}
+                  className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors"
+                >
+                  Forgot Password?
+                </button>
+              </div>
+            </div>
 
             <Button type="submit" fullWidth disabled={loading}>
               {loading ? 'Signing in...' : 'Sign In'}
@@ -99,6 +115,90 @@ export function LoginPage() {
                 className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors"
               >
                 Sign up
+              </button>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ForgotPasswordPage({ onBackToLogin }: { onBackToLogin: () => void }) {
+  const { resetPassword } = useAuth();
+  const [email, setEmail] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      await resetPassword(email);
+      setSuccess(true);
+    } catch (err: any) {
+      setError(err.message || 'Failed to send password reset email');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-50 to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4 transition-colors">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center mb-4">
+            <img src="/Clear Course Studio.png" alt="Clear Course Studio" className="h-24" />
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Reset Your Password</h1>
+          <p className="text-gray-600 dark:text-gray-400">Enter your email to receive a password reset link</p>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 border border-gray-200 dark:border-gray-700">
+          {success ? (
+            <div className="space-y-6">
+              <div className="p-4 bg-green-100 dark:bg-green-900/50 border border-green-300 dark:border-green-700 rounded-lg text-green-700 dark:text-green-200 text-sm">
+                Password reset email sent! Please check your inbox and follow the instructions to reset your password.
+              </div>
+              <Button type="button" fullWidth onClick={onBackToLogin}>
+                Back to Login
+              </Button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {error && (
+                <div className="p-4 bg-red-100 dark:bg-red-900/50 border border-red-300 dark:border-red-700 rounded-lg text-red-700 dark:text-red-200 text-sm">
+                  {error}
+                </div>
+              )}
+
+              <Input
+                label="Email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
+                required
+              />
+
+              <Button type="submit" fullWidth disabled={loading}>
+                {loading ? 'Sending...' : 'Send Reset Link'}
+              </Button>
+            </form>
+          )}
+
+          <div className="mt-6 text-center">
+            <p className="text-gray-600 dark:text-gray-400 text-sm">
+              Remember your password?{' '}
+              <button
+                type="button"
+                onClick={onBackToLogin}
+                className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors"
+              >
+                Back to Login
               </button>
             </p>
           </div>
