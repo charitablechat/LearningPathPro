@@ -79,6 +79,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await supabase.auth.signOut();
       throw new Error('EMAIL_NOT_CONFIRMED');
     }
+
+    if (data.user) {
+      await loadProfile(data.user.id);
+    }
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {

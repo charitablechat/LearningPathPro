@@ -19,6 +19,9 @@ export interface Profile {
   avatar_url: string | null;
   created_at: string;
   updated_at: string;
+  theme_preference: string | null;
+  organization_id: string | null;
+  is_super_admin: boolean | null;
 }
 
 export interface Course {

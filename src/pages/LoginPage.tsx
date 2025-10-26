@@ -2,6 +2,7 @@ import { useState, FormEvent } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
+import { navigateTo } from '../lib/router';
 
 export function LoginPage() {
   const { signIn, resetPassword } = useAuth();
@@ -21,6 +22,7 @@ export function LoginPage() {
 
     try {
       await signIn(email, password);
+      navigateTo('/dashboard');
     } catch (err: any) {
       if (err.message === 'EMAIL_NOT_CONFIRMED') {
         setError('Please check your email and confirm your account before signing in. Check your spam folder if you don\'t see the email.');
@@ -29,7 +31,6 @@ export function LoginPage() {
       } else {
         setError(err.message || 'Failed to sign in');
       }
-    } finally {
       setLoading(false);
     }
   };
