@@ -86,11 +86,33 @@ export function AdminDashboard({ onViewCourse }: AdminDashboardProps) {
 
   const deleteUser = async (userId: string) => {
     try {
-      await supabase.from('profiles').delete().eq('id', userId);
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session) {
+        throw new Error('Not authenticated');
+      }
+
+      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-user`;
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to delete user');
+      }
+
       await loadData();
       setDeletingUser(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting user:', error);
+      alert(error.message || 'Failed to delete user');
     }
   };
 
