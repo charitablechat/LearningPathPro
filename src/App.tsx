@@ -23,6 +23,8 @@ function AppContent() {
   const [currentPath, setCurrentPath] = useState(getPath());
   const [viewingCourse, setViewingCourse] = useState<{ id: string; name: string } | null>(null);
 
+  console.log('[APP] Render - loading:', loading, 'user:', !!user, 'profile:', !!profile, 'path:', currentPath);
+
   useEffect(() => {
     const handleRouteChange = () => {
       setCurrentPath(getPath());
