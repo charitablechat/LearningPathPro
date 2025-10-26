@@ -6,7 +6,7 @@ import { Navbar } from './components/Navbar';
 import { LoginPage } from './pages/LoginPage';
 import { LearnerDashboard } from './pages/LearnerDashboard';
 import { InstructorDashboard } from './pages/InstructorDashboard';
-import { AdminDashboard } from './pages/AdminDashboard';
+import { EnhancedAdminDashboard } from './pages/EnhancedAdminDashboard';
 import { ProfilePage } from './pages/ProfilePage';
 import { CourseViewerPage } from './pages/CourseViewerPage';
 import { LandingPage } from './pages/LandingPage';
@@ -152,7 +152,7 @@ function AppContent() {
       <Navbar onProfileClick={() => navigateTo('/profile')} />
       {profile.role === 'learner' && <LearnerDashboard />}
       {profile.role === 'instructor' && <InstructorDashboard onViewCourse={setViewingCourse} />}
-      {profile.role === 'admin' && <AdminDashboard onViewCourse={setViewingCourse} />}
+      {profile.role === 'admin' && <EnhancedAdminDashboard onViewCourse={setViewingCourse} />}
     </div>
   );
 }
