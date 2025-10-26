@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { createOrganization, slugify, validatePromoCode, redeemPromoCode } from '../lib/organization';
 import { supabase } from '../lib/supabase';
+import { navigateTo } from '../lib/router';
 import { Card } from '../components/Card';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
@@ -57,66 +58,76 @@ export function OrganizationSignupPage() {
 
     setLoading(true);
 
-    const { data: existingOrg } = await supabase
-      .from('organizations')
-      .select('id')
-      .eq('slug', organizationSlug)
-      .maybeSingle();
+    try {
+      const { data: existingOrg } = await supabase
+        .from('organizations')
+        .select('id')
+        .eq('slug', organizationSlug)
+        .maybeSingle();
 
-    if (existingOrg) {
-      showToast('This organization name is already taken. Please choose another.', 'error');
-      setLoading(false);
-      return;
-    }
-
-    const org = await createOrganization({
-      name: organizationName,
-      slug: organizationSlug,
-      owner_id: user.id,
-      primary_color: primaryColor,
-      secondary_color: secondaryColor,
-    });
-
-    if (!org) {
-      showToast('Failed to create organization', 'error');
-      setLoading(false);
-      return;
-    }
-
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .update({
-        organization_id: org.id,
-        role: 'admin',
-      })
-      .eq('id', user.id);
-
-    if (profileError) {
-      console.error('Error updating profile:', profileError);
-      showToast('Failed to link profile to organization', 'error');
-      setLoading(false);
-      return;
-    }
-
-    if (validatedPromo && validatedPromo.type === 'lifetime_deal') {
-      const redeemed = await redeemPromoCode(validatedPromo.id, org.id, user.id);
-
-      if (redeemed) {
-        await supabase
-          .from('organizations')
-          .update({
-            subscription_status: 'lifetime',
-            trial_ends_at: null,
-          })
-          .eq('id', org.id);
-
-        showToast('Lifetime deal activated!', 'success');
+      if (existingOrg) {
+        showToast('This organization name is already taken. Please choose another.', 'error');
+        setLoading(false);
+        return;
       }
-    }
 
-    await refetchProfile();
-    setLoading(false);
-    window.location.href = '/dashboard';
+      const org = await createOrganization({
+        name: organizationName,
+        slug: organizationSlug,
+        owner_id: user.id,
+        primary_color: primaryColor,
+        secondary_color: secondaryColor,
+      });
+
+      if (!org) {
+        showToast('Failed to create organization. Please try again.', 'error');
+        setLoading(false);
+        return;
+      }
+
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          organization_id: org.id,
+          role: 'admin',
+        })
+        .eq('id', user.id);
+
+      if (profileError) {
+        console.error('Error updating profile:', profileError);
+        showToast('Failed to link profile to organization. Please try again.', 'error');
+        setLoading(false);
+        return;
+      }
+
+      if (validatedPromo && validatedPromo.type === 'lifetime_deal') {
+        const redeemed = await redeemPromoCode(validatedPromo.id, org.id, user.id);
+
+        if (redeemed) {
+          await supabase
+            .from('organizations')
+            .update({
+              subscription_status: 'lifetime',
+              trial_ends_at: null,
+            })
+            .eq('id', org.id);
+
+          showToast('Lifetime deal activated!', 'success');
+        }
+      }
+
+      await refetchProfile();
+
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      showToast('Organization created successfully!', 'success');
+
+      navigateTo('/dashboard');
+    } catch (error) {
+      console.error('Error creating organization:', error);
+      showToast('An unexpected error occurred. Please try again.', 'error');
+      setLoading(false);
+    }
   };
 
   const nextStep = () => {

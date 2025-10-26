@@ -12,6 +12,7 @@ interface AuthContextType {
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updatePassword: (newPassword: string) => Promise<void>;
+  refetchProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -156,8 +157,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error;
   };
 
+  const refetchProfile = async () => {
+    if (user) {
+      await loadProfile(user.id);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signIn, signUp, signOut, changePassword, resetPassword, updatePassword }}>
+    <AuthContext.Provider value={{ user, profile, loading, signIn, signUp, signOut, changePassword, resetPassword, updatePassword, refetchProfile }}>
       {children}
     </AuthContext.Provider>
   );

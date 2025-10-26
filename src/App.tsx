@@ -29,7 +29,11 @@ function AppContent() {
     };
 
     window.addEventListener('popstate', handleRouteChange);
-    return () => window.removeEventListener('popstate', handleRouteChange);
+    window.addEventListener('routechange', handleRouteChange);
+    return () => {
+      window.removeEventListener('popstate', handleRouteChange);
+      window.removeEventListener('routechange', handleRouteChange);
+    };
   }, []);
 
   if (loading) {
@@ -47,12 +51,17 @@ function AppContent() {
     return <LoginPage />;
   }
 
-  if (user && !profile?.organization_id && currentPath !== '/organization/signup' && currentPath !== '/login') {
+  if (user && !profile?.organization_id && currentPath !== '/organization/signup' && currentPath !== '/login' && !profile?.is_super_admin) {
     return <OrganizationSignupPage />;
   }
 
   if (currentPath === '/' && !user) {
     return <LandingPage />;
+  }
+
+  if (currentPath === '/' && user && profile?.organization_id) {
+    navigateTo('/dashboard');
+    return null;
   }
 
   if (currentPath === '/pricing') {

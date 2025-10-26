@@ -10,6 +10,7 @@ export function getQueryParam(key: string): string | null {
 export function navigateTo(path: string) {
   window.history.pushState({}, '', path);
   window.dispatchEvent(new PopStateEvent('popstate'));
+  window.dispatchEvent(new Event('routechange'));
 }
 
 export function isPublicRoute(path: string): boolean {
