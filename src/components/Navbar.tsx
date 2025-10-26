@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { LogOut, User, ChevronDown, Moon, Sun } from 'lucide-react';
+import { LogOut, User, ChevronDown, Moon, Sun, Shield } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { navigateTo } from '../lib/router';
 
 interface NavbarProps {
   onProfileClick?: () => void;
@@ -50,14 +51,35 @@ export function Navbar({ onProfileClick }: NavbarProps) {
                 >
                   <User className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                   <span className="text-sm text-gray-700 dark:text-gray-300">{profile.full_name || profile.email}</span>
-                  <span className="text-xs px-2 py-0.5 bg-blue-600 text-white rounded-full capitalize">
-                    {profile.role}
-                  </span>
+                  {profile.is_super_admin ? (
+                    <span className="text-xs px-2 py-0.5 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-full font-semibold flex items-center gap-1">
+                      <Shield className="w-3 h-3" />
+                      Super Admin
+                    </span>
+                  ) : (
+                    <span className="text-xs px-2 py-0.5 bg-blue-600 text-white rounded-full capitalize">
+                      {profile.role}
+                    </span>
+                  )}
                   <ChevronDown className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                 </button>
 
                 {showDropdown && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl py-1 z-50">
+                  <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl py-1 z-50">
+                    {profile.is_super_admin && (
+                      <>
+                        <button
+                          onClick={() => {
+                            setShowDropdown(false);
+                            navigateTo('/super-admin');
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2 border-b border-gray-200 dark:border-gray-700"
+                        >
+                          <Shield className="w-4 h-4 text-orange-500" />
+                          <span className="font-semibold">Super Admin Dashboard</span>
+                        </button>
+                      </>
+                    )}
                     <button
                       onClick={() => {
                         setShowDropdown(false);
