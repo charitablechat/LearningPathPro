@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Copy, Eye, CheckCircle, XCircle, Archive, Search, Filter } from 'lucide-react';
+import { Plus, CreditCard as Edit2, Trash2, Copy, Eye, CheckCircle, XCircle, Archive, Search, Filter } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useOrganization } from '../contexts/OrganizationContext';
 import { Card } from '../components/Card';
