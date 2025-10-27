@@ -3,7 +3,8 @@ import {
   Users, BookOpen, TrendingUp, Settings, BarChart, Library,
   MessageSquare, CreditCard, ArrowLeft, Bell
 } from 'lucide-react';
-import { supabase, Profile } from '../lib/supabase';
+import { supabase, Profile, Course } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
 import { useOrganization } from '../contexts/OrganizationContext';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
@@ -38,6 +39,7 @@ interface EnhancedAdminDashboardProps {
 }
 
 export function EnhancedAdminDashboard({ onViewCourse }: EnhancedAdminDashboardProps) {
+  const { user } = useAuth();
   const { organization } = useOrganization();
   const [stats, setStats] = useState<Stats>({
     totalUsers: 0,
@@ -50,6 +52,8 @@ export function EnhancedAdminDashboard({ onViewCourse }: EnhancedAdminDashboardP
   });
   const [loading, setLoading] = useState(true);
   const [currentView, setCurrentView] = useState<DashboardView>('overview');
+  const [showCreateCourse, setShowCreateCourse] = useState(false);
+  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
 
   useEffect(() => {
     loadData();
@@ -297,9 +301,9 @@ export function EnhancedAdminDashboard({ onViewCourse }: EnhancedAdminDashboardP
         {currentView === 'overview' && renderOverview()}
         {currentView === 'courses' && (
           <AdminCourseManagement
-            onEditCourse={(course) => console.log('Edit course:', course)}
+            onEditCourse={(course) => setEditingCourse(course as Course)}
             onViewCourse={onViewCourse}
-            onCreateCourse={() => console.log('Create course')}
+            onCreateCourse={() => setShowCreateCourse(true)}
           />
         )}
         {currentView === 'content-library' && <AdminContentLibrary />}
@@ -311,6 +315,133 @@ export function EnhancedAdminDashboard({ onViewCourse }: EnhancedAdminDashboardP
             <p className="text-gray-400">Announcements feature coming soon...</p>
           </Card>
         )}
+      </div>
+
+      {(showCreateCourse || editingCourse) && (
+        <CourseModal
+          course={editingCourse}
+          onClose={() => {
+            setShowCreateCourse(false);
+            setEditingCourse(null);
+          }}
+          onSave={() => {
+            setShowCreateCourse(false);
+            setEditingCourse(null);
+            loadData();
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function CourseModal({
+  course,
+  onClose,
+  onSave,
+}: {
+  course: Course | null;
+  onClose: () => void;
+  onSave: () => void;
+}) {
+  const { user } = useAuth();
+  const { organization } = useOrganization();
+  const [title, setTitle] = useState(course?.title || '');
+  const [description, setDescription] = useState(course?.description || '');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      if (course) {
+        await supabase
+          .from('courses')
+          .update({ title, description })
+          .eq('id', course.id);
+      } else {
+        if (!organization?.id) {
+          setError('Organization context is required to create a course');
+          setLoading(false);
+          return;
+        }
+        await supabase.from('courses').insert({
+          title,
+          description,
+          instructor_id: user?.id,
+          organization_id: organization.id,
+        });
+      }
+      onSave();
+    } catch (err: any) {
+      setError(err.message || 'Failed to save course');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+      <div className="bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full border border-gray-700">
+        <div className="p-6 border-b border-gray-700">
+          <h2 className="text-2xl font-bold text-white">
+            {course ? 'Edit Course' : 'Create New Course'}
+          </h2>
+        </div>
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {error && (
+            <div className="p-4 bg-red-900/50 border border-red-700 rounded-lg text-red-200 text-sm">
+              {error}
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1.5">
+              Course Title
+            </label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Enter course title"
+              required
+              className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1.5">
+              Description
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Enter course description"
+              rows={4}
+              className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div className="flex gap-3 justify-end">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Saving...' : course ? 'Update Course' : 'Create Course'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

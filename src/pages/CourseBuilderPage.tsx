@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, GripVertical, ChevronLeft, Save, Link as LinkIcon } from 'lucide-react';
 import { supabase, Module, Lesson } from '../lib/supabase';
+import { useOrganization } from '../contexts/OrganizationContext';
 import { uploadFile, deleteFile, UploadProgress } from '../lib/storage';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
@@ -18,6 +19,7 @@ interface CourseBuilderPageProps {
 }
 
 export function CourseBuilderPage({ courseId, courseName, onBack }: CourseBuilderPageProps) {
+  const { organization } = useOrganization();
   const [modules, setModules] = useState<ModuleWithLessons[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModule, setShowAddModule] = useState(false);
@@ -229,6 +231,7 @@ export function CourseBuilderPage({ courseId, courseName, onBack }: CourseBuilde
       {showAddModule && (
         <ModuleModal
           courseId={courseId}
+          organizationId={organization?.id}
           onClose={() => setShowAddModule(false)}
           onSave={() => {
             setShowAddModule(false);
@@ -240,6 +243,7 @@ export function CourseBuilderPage({ courseId, courseName, onBack }: CourseBuilde
       {editingLesson && (
         <LessonModal
           moduleId={editingLesson.moduleId}
+          organizationId={organization?.id}
           lesson={editingLesson.lesson}
           onClose={() => setEditingLesson(null)}
           onSave={() => {
@@ -254,10 +258,12 @@ export function CourseBuilderPage({ courseId, courseName, onBack }: CourseBuilde
 
 function ModuleModal({
   courseId,
+  organizationId,
   onClose,
   onSave,
 }: {
   courseId: string;
+  organizationId?: string;
   onClose: () => void;
   onSave: () => void;
 }) {
@@ -283,6 +289,7 @@ function ModuleModal({
 
       await supabase.from('modules').insert({
         course_id: courseId,
+        organization_id: organizationId,
         title,
         description,
         order_index: nextOrderIndex,
@@ -341,11 +348,13 @@ function ModuleModal({
 
 function LessonModal({
   moduleId,
+  organizationId,
   lesson,
   onClose,
   onSave,
 }: {
   moduleId: string;
+  organizationId?: string;
   lesson?: Lesson;
   onClose: () => void;
   onSave: () => void;
@@ -444,6 +453,7 @@ function LessonModal({
 
         await supabase.from('lessons').insert({
           module_id: moduleId,
+          organization_id: organizationId,
           title,
           content,
           content_type: contentType,

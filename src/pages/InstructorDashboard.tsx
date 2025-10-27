@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, BookOpen, Users, Edit, Trash2, Eye, EyeOff, LayoutList, BarChart3 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useOrganization } from '../contexts/OrganizationContext';
 import { supabase, Course } from '../lib/supabase';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
@@ -18,6 +19,7 @@ interface InstructorDashboardProps {
 
 export function InstructorDashboard({ onViewCourse }: InstructorDashboardProps) {
   const { user } = useAuth();
+  const { organization } = useOrganization();
   const [courses, setCourses] = useState<CourseWithStats[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -243,6 +245,7 @@ function CourseModal({
   onSave: () => void;
 }) {
   const { user } = useAuth();
+  const { organization } = useOrganization();
   const [title, setTitle] = useState(course?.title || '');
   const [description, setDescription] = useState(course?.description || '');
   const [loading, setLoading] = useState(false);
@@ -260,10 +263,16 @@ function CourseModal({
           .update({ title, description })
           .eq('id', course.id);
       } else {
+        if (!organization?.id) {
+          setError('Organization context is required to create a course');
+          setLoading(false);
+          return;
+        }
         await supabase.from('courses').insert({
           title,
           description,
           instructor_id: user?.id,
+          organization_id: organization.id,
         });
       }
       onSave();
