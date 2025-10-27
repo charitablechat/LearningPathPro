@@ -57,8 +57,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const loadProfile = async (userId: string, skipLoadingState = false) => {
-    console.log('[AUTH] loadProfile called for userId:', userId, 'skipLoadingState:', skipLoadingState);
+  const loadProfile = async (userId: string, skipLoadingState = false, retryCount = 0, maxRetries = 5) => {
+    console.log('[AUTH] loadProfile called for userId:', userId, 'skipLoadingState:', skipLoadingState, 'retry:', retryCount);
 
     if (!skipLoadingState) {
       setLoading(true);
@@ -89,6 +89,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setLoading(false);
         }
         return null;
+      }
+
+      if (!data && retryCount < maxRetries) {
+        console.log(`[AUTH] Profile not found, retrying in ${500 * (retryCount + 1)}ms (attempt ${retryCount + 1}/${maxRetries})`);
+        await new Promise(resolve => setTimeout(resolve, 500 * (retryCount + 1)));
+        return loadProfile(userId, skipLoadingState, retryCount + 1, maxRetries);
       }
 
       console.log('[AUTH] Profile loaded successfully:', data ? 'Profile found' : 'No profile');
@@ -149,6 +155,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (data.user && !data.user.confirmed_at) {
       throw new Error('CONFIRMATION_REQUIRED');
+    }
+
+    if (data.user && data.session) {
+      console.log('[AUTH] User signed up and session created, loading profile with retry...');
+      setUser(data.user);
+      await loadProfile(data.user.id, false, 0, 5);
     }
   };
 

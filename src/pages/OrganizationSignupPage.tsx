@@ -151,44 +151,34 @@ export function OrganizationSignupPage() {
 
       setLoadingMessage('Finalizing setup...');
       console.log('[ORG CREATION] Step 5: Refetching profile to sync state...');
-      const refreshedProfile = await refetchProfile();
 
-      console.log('[ORG CREATION] Step 6: Profile refreshed, navigating to dashboard...');
+      let refreshedProfile = await refetchProfile();
+      let retries = 0;
+      const maxRetries = 5;
+
+      while ((!refreshedProfile || refreshedProfile.organization_id !== org.id) && retries < maxRetries) {
+        console.log(`[ORG CREATION] Profile not synced yet, retrying (${retries + 1}/${maxRetries})...`);
+        await new Promise(resolve => setTimeout(resolve, 800));
+        refreshedProfile = await refetchProfile();
+        retries++;
+      }
+
+      console.log('[ORG CREATION] Step 6: Profile refreshed after', retries, 'retries');
 
       if (refreshedProfile?.organization_id === org.id) {
-        console.log('[ORG CREATION] Profile confirmed with organization_id, navigating immediately...');
+        console.log('[ORG CREATION] Profile confirmed with organization_id, navigating to dashboard...');
         showSuccess('Organization created successfully!');
+        setLoading(false);
 
         setTimeout(() => {
           console.log('[ORG CREATION] Executing navigation to dashboard...');
           navigateTo('/dashboard');
-          setLoading(false);
-        }, 300);
-
-        setTimeout(() => {
-          if (getPath() === '/organization/signup') {
-            console.warn('[ORG CREATION] Navigation may have failed, showing fallback button');
-            setShowFallbackButton(true);
-            setLoading(false);
-          }
-        }, 3000);
+        }, 500);
       } else {
-        console.warn('[ORG CREATION] Profile refresh did not return expected organization_id, attempting navigation anyway...');
-        showSuccess('Organization created successfully!');
-
-        setTimeout(() => {
-          console.log('[ORG CREATION] Forcing navigation to dashboard...');
-          navigateTo('/dashboard');
-          setLoading(false);
-        }, 300);
-
-        setTimeout(() => {
-          if (getPath() === '/organization/signup') {
-            console.warn('[ORG CREATION] Navigation may have failed, showing fallback button');
-            setShowFallbackButton(true);
-            setLoading(false);
-          }
-        }, 3000);
+        console.warn('[ORG CREATION] Profile refresh did not return expected organization_id after retries');
+        showSuccess('Organization created! Click below to continue.');
+        setShowFallbackButton(true);
+        setLoading(false);
       }
     } catch (error: any) {
       console.error('[ORG CREATION] Unexpected error:', error);
