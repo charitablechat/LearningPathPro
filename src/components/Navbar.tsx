@@ -3,6 +3,8 @@ import { LogOut, User, ChevronDown, Moon, Sun, Shield } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { navigateTo } from '../lib/router';
+import { useToast } from '../hooks/useToast';
+import { ToastContainer } from './Toast';
 
 interface NavbarProps {
   onProfileClick?: () => void;
@@ -12,12 +14,15 @@ export function Navbar({ onProfileClick }: NavbarProps) {
   const { user, profile, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [showDropdown, setShowDropdown] = useState(false);
+  const { toasts, removeToast, success, error } = useToast();
 
   const handleSignOut = async () => {
     try {
       await signOut();
-    } catch (error) {
-      console.error('Error signing out:', error);
+      success('Successfully signed out!');
+    } catch (err) {
+      console.error('Error signing out:', err);
+      error('Failed to sign out');
     }
   };
 
@@ -26,8 +31,9 @@ export function Navbar({ onProfileClick }: NavbarProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center gap-3">
-            <img src="/CLEAR COURSE STUDIO.png" alt="Clear Course Studio" className="h-10" />
-            <span className="text-xl font-bold text-gray-900 dark:text-white">Clear Course Studio</span>
+            <img src="/CLEAR COURSE STUDIO.png" alt="Clear Course Studio" className="h-8 sm:h-10" />
+            <span className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white hidden sm:inline">Clear Course Studio</span>
+            <span className="text-lg font-bold text-gray-900 dark:text-white sm:hidden">CCS</span>
           </div>
 
           <div className="flex items-center gap-3">
@@ -47,17 +53,17 @@ export function Navbar({ onProfileClick }: NavbarProps) {
               <div className="relative">
                 <button
                   onClick={() => setShowDropdown(!showDropdown)}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                  className="flex items-center gap-2 px-2 sm:px-3 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                 >
                   <User className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">{profile.full_name || profile.email}</span>
+                  <span className="text-sm text-gray-700 dark:text-gray-300 hidden md:inline">{profile.full_name || profile.email}</span>
                   {profile.is_super_admin ? (
                     <span className="text-xs px-2 py-0.5 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-full font-semibold flex items-center gap-1">
                       <Shield className="w-3 h-3" />
-                      Super Admin
+                      <span className="hidden sm:inline">Super Admin</span>
                     </span>
                   ) : (
-                    <span className="text-xs px-2 py-0.5 bg-blue-600 text-white rounded-full capitalize">
+                    <span className="text-xs px-2 py-0.5 bg-blue-600 text-white rounded-full capitalize hidden sm:inline">
                       {profile.role}
                     </span>
                   )}
@@ -107,6 +113,7 @@ export function Navbar({ onProfileClick }: NavbarProps) {
           </div>
         </div>
       </div>
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </nav>
   );
 }

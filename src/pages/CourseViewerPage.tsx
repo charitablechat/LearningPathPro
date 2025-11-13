@@ -6,6 +6,8 @@ import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { VideoPlayer } from '../components/VideoPlayer';
 import { ProgressRing } from '../components/ProgressRing';
+import { useToast } from '../hooks/useToast';
+import { ToastContainer } from '../components/Toast';
 
 interface ModuleWithLessons extends Module {
   lessons: LessonWithProgress[];
@@ -28,6 +30,7 @@ export function CourseViewerPage({ courseId, courseName, onBack }: CourseViewerP
   const [loading, setLoading] = useState(true);
   const [showSidebar, setShowSidebar] = useState(true);
   const [overallProgress, setOverallProgress] = useState(0);
+  const { toasts, removeToast, success } = useToast();
 
   useEffect(() => {
     loadCourseContent();
@@ -116,6 +119,7 @@ export function CourseViewerPage({ courseId, courseName, onBack }: CourseViewerP
       }
 
       await loadCourseContent();
+      success('Lesson completed!');
     } catch (error) {
       console.error('Error marking lesson complete:', error);
     }
@@ -315,6 +319,7 @@ export function CourseViewerPage({ courseId, courseName, onBack }: CourseViewerP
           </div>
         )}
       </div>
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   );
 }

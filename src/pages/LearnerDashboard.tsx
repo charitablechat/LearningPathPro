@@ -6,6 +6,8 @@ import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { CourseViewerPage } from './CourseViewerPage';
+import { useToast } from '../hooks/useToast';
+import { ToastContainer } from '../components/Toast';
 
 interface CourseWithProgress extends Course {
   enrollment?: Enrollment;
@@ -19,6 +21,7 @@ export function LearnerDashboard() {
   const [loading, setLoading] = useState(true);
   const [selectedCourse, setSelectedCourse] = useState<CourseWithProgress | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const { toasts, removeToast, success, error } = useToast();
 
   useEffect(() => {
     loadCourses();
@@ -70,7 +73,7 @@ export function LearnerDashboard() {
     }
   };
 
-  const enrollInCourse = async (courseId: string) => {
+  const enrollInCourse = async (courseId: string, courseTitle: string) => {
     if (!user) return;
 
     try {
@@ -79,8 +82,10 @@ export function LearnerDashboard() {
         course_id: courseId,
       });
       await loadCourses();
-    } catch (error) {
-      console.error('Error enrolling:', error);
+      success(`Successfully enrolled in ${courseTitle}!`);
+    } catch (err) {
+      console.error('Error enrolling:', err);
+      error('Failed to enroll in course');
     }
   };
 
@@ -203,7 +208,7 @@ export function LearnerDashboard() {
                         variant="outline"
                         size="sm"
                         fullWidth
-                        onClick={() => enrollInCourse(course.id)}
+                        onClick={() => enrollInCourse(course.id, course.title)}
                       >
                         Enroll Now
                       </Button>
@@ -215,6 +220,7 @@ export function LearnerDashboard() {
           </>
         )}
       </div>
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   );
 }

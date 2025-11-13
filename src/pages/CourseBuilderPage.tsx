@@ -7,6 +7,10 @@ import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { FileUploader, FileType } from '../components/FileUploader';
+import { ConfirmDialog } from '../components/ConfirmDialog';
+import { useConfirm } from '../hooks/useConfirm';
+import { useToast } from '../hooks/useToast';
+import { ToastContainer } from '../components/Toast';
 
 interface ModuleWithLessons extends Module {
   lessons: Lesson[];
@@ -24,6 +28,8 @@ export function CourseBuilderPage({ courseId, courseName, onBack }: CourseBuilde
   const [loading, setLoading] = useState(true);
   const [showAddModule, setShowAddModule] = useState(false);
   const [editingLesson, setEditingLesson] = useState<{ moduleId: string; lesson?: Lesson } | null>(null);
+  const { confirm, confirmState } = useConfirm();
+  const { toasts, removeToast, success, error } = useToast();
 
   useEffect(() => {
     loadCourseStructure();
@@ -62,19 +68,37 @@ export function CourseBuilderPage({ courseId, courseName, onBack }: CourseBuilde
     }
   };
 
-  const deleteModule = async (moduleId: string) => {
-    if (!confirm('Delete this module and all its lessons?')) return;
+  const deleteModule = async (moduleId: string, moduleTitle: string) => {
+    const confirmed = await confirm({
+      title: 'Delete Module',
+      message: `Are you sure you want to delete "${moduleTitle}" and all its lessons? This action cannot be undone.`,
+      confirmLabel: 'Delete Module',
+      cancelLabel: 'Cancel',
+      variant: 'danger',
+    });
+
+    if (!confirmed) return;
 
     try {
       await supabase.from('modules').delete().eq('id', moduleId);
       await loadCourseStructure();
-    } catch (error) {
-      console.error('Error deleting module:', error);
+      success('Module deleted successfully');
+    } catch (err) {
+      console.error('Error deleting module:', err);
+      error('Failed to delete module');
     }
   };
 
-  const deleteLesson = async (lessonId: string) => {
-    if (!confirm('Delete this lesson?')) return;
+  const deleteLesson = async (lessonId: string, lessonTitle: string) => {
+    const confirmed = await confirm({
+      title: 'Delete Lesson',
+      message: `Are you sure you want to delete "${lessonTitle}"? This action cannot be undone.`,
+      confirmLabel: 'Delete Lesson',
+      cancelLabel: 'Cancel',
+      variant: 'danger',
+    });
+
+    if (!confirmed) return;
 
     try {
       const { data: lesson } = await supabase
@@ -86,15 +110,17 @@ export function CourseBuilderPage({ courseId, courseName, onBack }: CourseBuilde
       if (lesson?.content_url) {
         try {
           await deleteFile(lesson.content_url);
-        } catch (error) {
-          console.error('Error deleting file:', error);
+        } catch (err) {
+          console.error('Error deleting file:', err);
         }
       }
 
       await supabase.from('lessons').delete().eq('id', lessonId);
       await loadCourseStructure();
-    } catch (error) {
-      console.error('Error deleting lesson:', error);
+      success('Lesson deleted successfully');
+    } catch (err) {
+      console.error('Error deleting lesson:', err);
+      error('Failed to delete lesson');
     }
   };
 
@@ -163,7 +189,7 @@ export function CourseBuilderPage({ courseId, courseName, onBack }: CourseBuilde
                       <Plus className="w-4 h-4 mr-1" />
                       Add Lesson
                     </Button>
-                    <Button variant="danger" size="sm" onClick={() => deleteModule(module.id)}>
+                    <Button variant="danger" size="sm" onClick={() => deleteModule(module.id, module.title)}>
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
@@ -213,7 +239,7 @@ export function CourseBuilderPage({ courseId, courseName, onBack }: CourseBuilde
                           <Button
                             variant="danger"
                             size="sm"
-                            onClick={() => deleteLesson(lesson.id)}
+                            onClick={() => deleteLesson(lesson.id, lesson.title)}
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
@@ -236,6 +262,7 @@ export function CourseBuilderPage({ courseId, courseName, onBack }: CourseBuilde
           onSave={() => {
             setShowAddModule(false);
             loadCourseStructure();
+            success('Module created successfully');
           }}
         />
       )}
@@ -249,9 +276,24 @@ export function CourseBuilderPage({ courseId, courseName, onBack }: CourseBuilde
           onSave={() => {
             setEditingLesson(null);
             loadCourseStructure();
+            success(editingLesson.lesson ? 'Lesson updated successfully' : 'Lesson created successfully');
           }}
+          onError={(message: string) => error(message)}
         />
       )}
+
+      <ConfirmDialog
+        isOpen={confirmState.isOpen}
+        title={confirmState.title}
+        message={confirmState.message}
+        confirmLabel={confirmState.confirmLabel}
+        cancelLabel={confirmState.cancelLabel}
+        variant={confirmState.variant}
+        onConfirm={confirmState.onConfirm}
+        onCancel={confirmState.onCancel}
+      />
+
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   );
 }
@@ -352,12 +394,14 @@ function LessonModal({
   lesson,
   onClose,
   onSave,
+  onError,
 }: {
   moduleId: string;
   organizationId?: string;
   lesson?: Lesson;
   onClose: () => void;
   onSave: () => void;
+  onError: (message: string) => void;
 }) {
   const [title, setTitle] = useState(lesson?.title || '');
   const [content, setContent] = useState(lesson?.content || '');
@@ -467,8 +511,9 @@ function LessonModal({
       }
 
       onSave();
-    } catch (error) {
-      console.error('Error saving lesson:', error);
+    } catch (err) {
+      console.error('Error saving lesson:', err);
+      onError('Failed to save lesson. Please try again.');
     } finally {
       setLoading(false);
       setUploading(false);

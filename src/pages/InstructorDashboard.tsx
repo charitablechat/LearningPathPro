@@ -6,6 +6,10 @@ import { supabase, Course } from '../lib/supabase';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
+import { ConfirmDialog } from '../components/ConfirmDialog';
+import { useConfirm } from '../hooks/useConfirm';
+import { useToast } from '../hooks/useToast';
+import { ToastContainer } from '../components/Toast';
 import { CourseBuilderPage } from './CourseBuilderPage';
 import { CourseAnalyticsPage } from './CourseAnalyticsPage';
 
@@ -26,6 +30,8 @@ export function InstructorDashboard({ onViewCourse }: InstructorDashboardProps) 
   const [editingCourse, setEditingCourse] = useState<CourseWithStats | null>(null);
   const [buildingCourse, setBuildingCourse] = useState<CourseWithStats | null>(null);
   const [viewingAnalytics, setViewingAnalytics] = useState<CourseWithStats | null>(null);
+  const { confirm, confirmState } = useConfirm();
+  const { toasts, removeToast, success, error } = useToast();
 
   useEffect(() => {
     loadCourses();
@@ -64,19 +70,31 @@ export function InstructorDashboard({ onViewCourse }: InstructorDashboardProps) 
         .update({ is_published: !currentStatus })
         .eq('id', courseId);
       await loadCourses();
-    } catch (error) {
-      console.error('Error updating course:', error);
+      success(currentStatus ? 'Course unpublished successfully' : 'Course published successfully');
+    } catch (err) {
+      console.error('Error updating course:', err);
+      error('Failed to update course status');
     }
   };
 
-  const deleteCourse = async (courseId: string) => {
-    if (!confirm('Are you sure you want to delete this course?')) return;
+  const deleteCourse = async (courseId: string, courseName: string) => {
+    const confirmed = await confirm({
+      title: 'Delete Course',
+      message: `Are you sure you want to delete "${courseName}"? This action cannot be undone and will remove all modules and lessons.`,
+      confirmLabel: 'Delete Course',
+      cancelLabel: 'Cancel',
+      variant: 'danger',
+    });
+
+    if (!confirmed) return;
 
     try {
       await supabase.from('courses').delete().eq('id', courseId);
       await loadCourses();
-    } catch (error) {
-      console.error('Error deleting course:', error);
+      success('Course deleted successfully');
+    } catch (err) {
+      console.error('Error deleting course:', err);
+      error('Failed to delete course');
     }
   };
 
@@ -206,7 +224,7 @@ export function InstructorDashboard({ onViewCourse }: InstructorDashboardProps) 
                   <Button
                     variant="danger"
                     size="sm"
-                    onClick={() => deleteCourse(course.id)}
+                    onClick={() => deleteCourse(course.id, course.title)}
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
@@ -227,9 +245,24 @@ export function InstructorDashboard({ onViewCourse }: InstructorDashboardProps) 
               setShowCreateModal(false);
               setEditingCourse(null);
               loadCourses();
+              success(editingCourse ? 'Course updated successfully' : 'Course created successfully');
             }}
+            onError={(message: string) => error(message)}
           />
         )}
+
+        <ConfirmDialog
+          isOpen={confirmState.isOpen}
+          title={confirmState.title}
+          message={confirmState.message}
+          confirmLabel={confirmState.confirmLabel}
+          cancelLabel={confirmState.cancelLabel}
+          variant={confirmState.variant}
+          onConfirm={confirmState.onConfirm}
+          onCancel={confirmState.onCancel}
+        />
+
+        <ToastContainer toasts={toasts} removeToast={removeToast} />
       </div>
     </div>
   );
@@ -239,10 +272,12 @@ function CourseModal({
   course,
   onClose,
   onSave,
+  onError,
 }: {
   course: Course | null;
   onClose: () => void;
   onSave: () => void;
+  onError: (message: string) => void;
 }) {
   const { user } = useAuth();
   const { organization } = useOrganization();
@@ -277,7 +312,9 @@ function CourseModal({
       }
       onSave();
     } catch (err: any) {
-      setError(err.message || 'Failed to save course');
+      const errorMsg = err.message || 'Failed to save course';
+      setError(errorMsg);
+      onError(errorMsg);
     } finally {
       setLoading(false);
     }

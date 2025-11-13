@@ -4,6 +4,8 @@ import { Input } from '../components/Input';
 import { Button } from '../components/Button';
 import { navigateTo } from '../lib/router';
 import { acceptLegalTerms } from '../lib/legal';
+import { useToast } from '../hooks/useToast';
+import { ToastContainer } from '../components/Toast';
 
 export function LoginPage() {
   const { signIn, resetPassword } = useAuth();
@@ -14,6 +16,7 @@ export function LoginPage() {
   const [showSignUp, setShowSignUp] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const { toasts, removeToast, success: showSuccess } = useToast();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -23,6 +26,7 @@ export function LoginPage() {
 
     try {
       await signIn(email, password);
+      showSuccess('Successfully signed in!');
       navigateTo('/dashboard');
     } catch (err: any) {
       if (err.message === 'EMAIL_NOT_CONFIRMED') {
@@ -122,6 +126,7 @@ export function LoginPage() {
           </div>
         </div>
       </div>
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   );
 }
