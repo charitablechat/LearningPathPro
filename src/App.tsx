@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth, AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { OrganizationProvider } from './contexts/OrganizationContext';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { Navbar } from './components/Navbar';
 import { LoginPage } from './pages/LoginPage';
 import { LearnerDashboard } from './pages/LearnerDashboard';
@@ -20,6 +21,11 @@ import { TermsOfServicePage } from './pages/TermsOfServicePage';
 import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
 import { RefundPolicyPage } from './pages/RefundPolicyPage';
 import { CookiePolicyPage } from './pages/CookiePolicyPage';
+import { FeaturesPage } from './pages/FeaturesPage';
+import { AboutPage } from './pages/AboutPage';
+import { ContactPage } from './pages/ContactPage';
+import { FAQPage } from './pages/FAQPage';
+import { NotFoundPage } from './pages/NotFoundPage';
 import { CookieConsent } from './components/CookieConsent';
 import { getPath, navigateTo } from './lib/router';
 import { logger } from './lib/logger';
@@ -93,7 +99,7 @@ function AppContent() {
     );
   }
 
-  const publicRoutes = ['/', '/pricing', '/login', '/signup', '/reset-password', '/terms', '/privacy', '/refunds', '/cookies'];
+  const publicRoutes = ['/', '/pricing', '/login', '/signup', '/reset-password', '/terms', '/privacy', '/refunds', '/cookies', '/features', '/about', '/contact', '/faq'];
   const isPublicRoute = publicRoutes.includes(currentPath);
 
   if (!user && !isPublicRoute) {
@@ -149,6 +155,22 @@ function AppContent() {
 
   if (currentPath === '/cookies') {
     return <CookiePolicyPage />;
+  }
+
+  if (currentPath === '/features') {
+    return <FeaturesPage />;
+  }
+
+  if (currentPath === '/about') {
+    return <AboutPage />;
+  }
+
+  if (currentPath === '/contact') {
+    return <ContactPage />;
+  }
+
+  if (currentPath === '/faq') {
+    return <FAQPage />;
   }
 
   if (currentPath === '/organization/signup') {
@@ -207,6 +229,10 @@ function AppContent() {
     );
   }
 
+  if (!publicRoutes.includes(currentPath) && currentPath !== '/dashboard' && currentPath !== '/settings' && currentPath !== '/super-admin' && currentPath !== '/profile') {
+    return <NotFoundPage />;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
       <Navbar onProfileClick={() => navigateTo('/profile')} />
@@ -220,13 +246,15 @@ function AppContent() {
 
 function App() {
   return (
-    <AuthProvider>
-      <OrganizationProvider>
-        <ThemeProvider>
-          <AppContent />
-        </ThemeProvider>
-      </OrganizationProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <OrganizationProvider>
+          <ThemeProvider>
+            <AppContent />
+          </ThemeProvider>
+        </OrganizationProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

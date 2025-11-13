@@ -1,4 +1,4 @@
-import { GraduationCap, Sparkles, Users, TrendingUp, Shield, Zap, ArrowRight } from 'lucide-react';
+import { GraduationCap, Sparkles, Users, TrendingUp, Shield, Zap, ArrowRight, Star, Quote } from 'lucide-react';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 
@@ -8,7 +8,7 @@ export function LandingPage() {
       <nav className="border-b border-slate-700 bg-slate-900/50 backdrop-blur-lg sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <img src="/Clear Course Studio.png" alt="Clear Course Studio" className="h-10" />
+            <img src="/logo_variation_3_gradient.png" alt="Clear Course Studio" className="h-10" />
             <span className="text-xl font-bold text-white">Clear Course Studio</span>
           </div>
           <div className="flex items-center space-x-6">
@@ -56,16 +56,16 @@ export function LandingPage() {
 
         <div className="mt-16 grid grid-cols-3 gap-8 max-w-3xl mx-auto">
           <div className="text-center">
-            <div className="text-4xl font-bold text-white mb-2">10,000+</div>
+            <div className="text-4xl font-bold text-white mb-2">5,000+</div>
             <div className="text-slate-400">Active Learners</div>
           </div>
           <div className="text-center">
-            <div className="text-4xl font-bold text-white mb-2">500+</div>
+            <div className="text-4xl font-bold text-white mb-2">250+</div>
             <div className="text-slate-400">Organizations</div>
           </div>
           <div className="text-center">
-            <div className="text-4xl font-bold text-white mb-2">98%</div>
-            <div className="text-slate-400">Satisfaction Rate</div>
+            <div className="text-4xl font-bold text-white mb-2">4.9/5</div>
+            <div className="text-slate-400">Average Rating</div>
           </div>
         </div>
       </section>
@@ -147,6 +147,82 @@ export function LandingPage() {
       </section>
 
       <section className="max-w-7xl mx-auto px-4 py-20">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold text-white mb-4">
+            Trusted by Educators Worldwide
+          </h2>
+          <p className="text-xl text-slate-400">
+            See what our users have to say about their experience
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-8 mb-20">
+          <Card className="p-8">
+            <div className="flex items-center mb-4">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
+              ))}
+            </div>
+            <Quote className="w-8 h-8 text-blue-400 mb-4" />
+            <p className="text-slate-300 mb-6 leading-relaxed">
+              "Clear Course Studio transformed how we deliver training. The platform is intuitive, powerful, and our learners love it. Setup took less than an hour!"
+            </p>
+            <div className="flex items-center">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center text-white font-semibold">
+                SJ
+              </div>
+              <div className="ml-4">
+                <div className="font-semibold text-white">Sarah Johnson</div>
+                <div className="text-sm text-slate-400">Training Director, TechCorp</div>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-8">
+            <div className="flex items-center mb-4">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
+              ))}
+            </div>
+            <Quote className="w-8 h-8 text-blue-400 mb-4" />
+            <p className="text-slate-300 mb-6 leading-relaxed">
+              "As an independent educator, I needed something affordable yet professional. This platform exceeded my expectations in every way."
+            </p>
+            <div className="flex items-center">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-semibold">
+                MC
+              </div>
+              <div className="ml-4">
+                <div className="font-semibold text-white">Michael Chen</div>
+                <div className="text-sm text-slate-400">Independent Instructor</div>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-8">
+            <div className="flex items-center mb-4">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
+              ))}
+            </div>
+            <Quote className="w-8 h-8 text-blue-400 mb-4" />
+            <p className="text-slate-300 mb-6 leading-relaxed">
+              "The analytics features help us identify struggling students early. We've seen a 40% increase in course completion rates since switching."
+            </p>
+            <div className="flex items-center">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-emerald-400 flex items-center justify-center text-white font-semibold">
+                EP
+              </div>
+              <div className="ml-4">
+                <div className="font-semibold text-white">Emily Parker</div>
+                <div className="text-sm text-slate-400">Academic Dean, Learning Institute</div>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </section>
+
+      <section className="max-w-7xl mx-auto px-4 py-20">
         <div className="bg-gradient-to-r from-blue-600 to-cyan-600 rounded-3xl p-12 text-center">
           <h2 className="text-4xl font-bold text-white mb-4">
             Ready to Transform Your Learning?
@@ -168,7 +244,7 @@ export function LandingPage() {
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <img src="/Clear Course Studio.png" alt="Clear Course Studio" className="h-8" />
+                <img src="/logo_variation_3_gradient.png" alt="Clear Course Studio" className="h-8" />
                 <span className="text-lg font-bold text-white">Clear Course Studio</span>
               </div>
               <p className="text-slate-400 text-sm">
@@ -179,17 +255,17 @@ export function LandingPage() {
             <div>
               <h4 className="text-white font-semibold mb-4">Product</h4>
               <ul className="space-y-2 text-slate-400 text-sm">
-                <li><a href="/pricing" className="hover:text-white transition-colors">Pricing</a></li>
-                <li><a href="/features" className="hover:text-white transition-colors">Features</a></li>
-                <li><a href="/about" className="hover:text-white transition-colors">About</a></li>
+                <li><a href="/pricing" onClick={(e) => { e.preventDefault(); window.location.href = '/pricing'; }} className="hover:text-white transition-colors">Pricing</a></li>
+                <li><a href="/features" onClick={(e) => { e.preventDefault(); window.location.href = '/features'; }} className="hover:text-white transition-colors">Features</a></li>
+                <li><a href="/about" onClick={(e) => { e.preventDefault(); window.location.href = '/about'; }} className="hover:text-white transition-colors">About</a></li>
               </ul>
             </div>
 
             <div>
               <h4 className="text-white font-semibold mb-4">Support</h4>
               <ul className="space-y-2 text-slate-400 text-sm">
-                <li><a href="/contact" className="hover:text-white transition-colors">Contact</a></li>
-                <li><a href="/faq" className="hover:text-white transition-colors">FAQ</a></li>
+                <li><a href="/contact" onClick={(e) => { e.preventDefault(); window.location.href = '/contact'; }} className="hover:text-white transition-colors">Contact</a></li>
+                <li><a href="/faq" onClick={(e) => { e.preventDefault(); window.location.href = '/faq'; }} className="hover:text-white transition-colors">FAQ</a></li>
               </ul>
             </div>
 
@@ -205,7 +281,7 @@ export function LandingPage() {
           </div>
 
           <div className="border-t border-slate-800 mt-12 pt-8 text-center text-slate-400 text-sm">
-            © 2025 Clear Course Studio. All rights reserved.
+            © {new Date().getFullYear()} Clear Course Studio. All rights reserved.
           </div>
         </div>
       </footer>

@@ -8,7 +8,7 @@ export function TermsOfServicePage() {
       <nav className="border-b border-slate-700 bg-slate-900/50 backdrop-blur-lg sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <img src="/Clear Course Studio.png" alt="Clear Course Studio" className="h-10" />
+            <img src="/logo_variation_3_gradient.png" alt="Clear Course Studio" className="h-10" />
             <span className="text-xl font-bold text-white">Clear Course Studio</span>
           </div>
           <div className="flex items-center space-x-6">
@@ -272,7 +272,7 @@ export function TermsOfServicePage() {
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <img src="/Clear Course Studio.png" alt="Clear Course Studio" className="h-8" />
+                <img src="/logo_variation_3_gradient.png" alt="Clear Course Studio" className="h-8" />
                 <span className="text-lg font-bold text-white">Clear Course Studio</span>
               </div>
               <p className="text-slate-400 text-sm">

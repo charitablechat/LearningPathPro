@@ -56,7 +56,7 @@ export function ResetPasswordPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center mb-4">
-            <img src="/Clear Course Studio.png" alt="Clear Course Studio" className="h-24" />
+            <img src="/logo_variation_3_gradient.png" alt="Clear Course Studio" className="h-24" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Set New Password</h1>
           <p className="text-gray-600 dark:text-gray-400">Enter your new password below</p>
