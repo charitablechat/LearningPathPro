@@ -54,7 +54,7 @@ export function LoginPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center mb-4">
-            <img src="/logo_variation_3_gradient.png" alt="Clear Course Studio" className="h-24" />
+            <img src="/CLEAR COURSE STUDIO.png" alt="Clear Course Studio" className="h-24" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Welcome to Clear Course Studio</h1>
           <p className="text-gray-600 dark:text-gray-400">Sign in to continue your learning journey</p>
@@ -153,7 +153,7 @@ function ForgotPasswordPage({ onBackToLogin }: { onBackToLogin: () => void }) {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center mb-4">
-            <img src="/logo_variation_3_gradient.png" alt="Clear Course Studio" className="h-24" />
+            <img src="/CLEAR COURSE STUDIO.png" alt="Clear Course Studio" className="h-24" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Reset Your Password</h1>
           <p className="text-gray-600 dark:text-gray-400">Enter your email to receive a password reset link</p>
@@ -259,7 +259,7 @@ function SignUpPage({ onBackToLogin, onSuccess }: { onBackToLogin: () => void; o
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center mb-4">
-            <img src="/logo_variation_3_gradient.png" alt="Clear Course Studio" className="h-24" />
+            <img src="/CLEAR COURSE STUDIO.png" alt="Clear Course Studio" className="h-24" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Join Clear Course Studio</h1>
           <p className="text-gray-600 dark:text-gray-400">Create your account and start learning</p>

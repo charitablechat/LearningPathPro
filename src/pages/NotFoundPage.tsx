@@ -7,7 +7,7 @@ export function NotFoundPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
       <div className="text-center max-w-2xl mx-auto">
         <div className="mb-8">
-          <img src="/logo_variation_3_gradient.png" alt="Clear Course Studio" className="h-20 mx-auto mb-8" />
+          <img src="/CLEAR COURSE STUDIO.png" alt="Clear Course Studio" className="h-20 mx-auto mb-8" />
           <h1 className="text-9xl font-bold text-white mb-4">404</h1>
           <h2 className="text-4xl font-bold text-white mb-4">Page Not Found</h2>
           <p className="text-xl text-slate-400 mb-8">
