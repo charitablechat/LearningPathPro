@@ -16,6 +16,11 @@ import { OrganizationSettingsPage } from './pages/OrganizationSettingsPage';
 import { SuperAdminDashboard } from './pages/SuperAdminDashboard';
 import { SubscribePage } from './pages/SubscribePage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
+import { TermsOfServicePage } from './pages/TermsOfServicePage';
+import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
+import { RefundPolicyPage } from './pages/RefundPolicyPage';
+import { CookiePolicyPage } from './pages/CookiePolicyPage';
+import { CookieConsent } from './components/CookieConsent';
 import { getPath, navigateTo } from './lib/router';
 
 function AppContent() {
@@ -87,7 +92,7 @@ function AppContent() {
     );
   }
 
-  const publicRoutes = ['/', '/pricing', '/login', '/signup', '/reset-password'];
+  const publicRoutes = ['/', '/pricing', '/login', '/signup', '/reset-password', '/terms', '/privacy', '/refunds', '/cookies'];
   const isPublicRoute = publicRoutes.includes(currentPath);
 
   if (!user && !isPublicRoute) {
@@ -127,6 +132,22 @@ function AppContent() {
 
   if (currentPath === '/reset-password') {
     return <ResetPasswordPage />;
+  }
+
+  if (currentPath === '/terms') {
+    return <TermsOfServicePage />;
+  }
+
+  if (currentPath === '/privacy') {
+    return <PrivacyPolicyPage />;
+  }
+
+  if (currentPath === '/refunds') {
+    return <RefundPolicyPage />;
+  }
+
+  if (currentPath === '/cookies') {
+    return <CookiePolicyPage />;
   }
 
   if (currentPath === '/organization/signup') {
@@ -191,6 +212,7 @@ function AppContent() {
       {profile.role === 'learner' && <LearnerDashboard />}
       {profile.role === 'instructor' && <InstructorDashboard onViewCourse={setViewingCourse} />}
       {profile.role === 'admin' && <EnhancedAdminDashboard onViewCourse={setViewingCourse} />}
+      <CookieConsent />
     </div>
   );
 }

@@ -14,7 +14,7 @@ export function navigateTo(path: string) {
 }
 
 export function isPublicRoute(path: string): boolean {
-  const publicRoutes = ['/', '/pricing', '/features', '/about', '/contact', '/faq', '/terms', '/privacy', '/login', '/signup', '/reset-password'];
+  const publicRoutes = ['/', '/pricing', '/features', '/about', '/contact', '/faq', '/terms', '/privacy', '/refunds', '/cookies', '/login', '/signup', '/reset-password'];
   return publicRoutes.includes(path);
 }
 

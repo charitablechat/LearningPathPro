@@ -198,6 +198,8 @@ export function LandingPage() {
               <ul className="space-y-2 text-slate-400 text-sm">
                 <li><a href="/terms" className="hover:text-white transition-colors">Terms of Service</a></li>
                 <li><a href="/privacy" className="hover:text-white transition-colors">Privacy Policy</a></li>
+                <li><a href="/refunds" className="hover:text-white transition-colors">Refund Policy</a></li>
+                <li><a href="/cookies" className="hover:text-white transition-colors">Cookie Policy</a></li>
               </ul>
             </div>
           </div>
