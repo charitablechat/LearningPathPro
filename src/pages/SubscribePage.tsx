@@ -175,11 +175,48 @@ export function SubscribePage() {
           </div>
         </Card>
 
-        <p className="text-center text-sm text-slate-400">
-          You will be redirected to Stripe for secure payment processing.
-          <br />
-          By continuing, you agree to our Terms of Service and Privacy Policy.
-        </p>
+        <div className="text-center space-y-3">
+          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
+            <h3 className="text-sm font-semibold text-white mb-2">Payment Processing Notice</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Your payment will be securely processed by Stripe, our payment processor. Stripe is PCI-DSS compliant
+              and uses industry-standard encryption. We do not store your credit card information on our servers.
+              For more information, see{' '}
+              <a
+                href="https://stripe.com/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-400 hover:text-blue-300 underline"
+              >
+                Stripe's Privacy Policy
+              </a>.
+            </p>
+          </div>
+
+          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
+            <h3 className="text-sm font-semibold text-white mb-2">Subscription Terms</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              This is a recurring subscription that will automatically renew at the end of each billing period.
+              You can cancel anytime from your account settings. Cancellations take effect at the end of the
+              current billing period. See our{' '}
+              <a href="/refunds" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">
+                Refund Policy
+              </a>{' '}
+              for details on refunds.
+            </p>
+          </div>
+
+          <p className="text-xs text-slate-400">
+            By continuing, you agree to our{' '}
+            <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">
+              Terms of Service
+            </a>{' '}
+            and{' '}
+            <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">
+              Privacy Policy
+            </a>.
+          </p>
+        </div>
       </div>
     </div>
   );

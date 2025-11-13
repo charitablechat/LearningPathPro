@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
 import { navigateTo } from '../lib/router';
+import { acceptLegalTerms } from '../lib/legal';
 
 export function LoginPage() {
   const { signIn, resetPassword } = useAuth();
@@ -216,14 +217,30 @@ function SignUpPage({ onBackToLogin, onSuccess }: { onBackToLogin: () => void; o
   const [fullName, setFullName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const [marketingConsent, setMarketingConsent] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (!termsAccepted || !privacyAccepted) {
+      setError('You must accept the Terms of Service and Privacy Policy to continue.');
+      return;
+    }
+
     setLoading(true);
 
     try {
       await signUp(email, password, fullName);
+
+      await acceptLegalTerms({
+        termsAccepted: true,
+        privacyAccepted: true,
+        marketingConsent,
+      });
+
       onSuccess();
     } catch (err: any) {
       if (err.message === 'CONFIRMATION_REQUIRED') {
@@ -288,7 +305,65 @@ function SignUpPage({ onBackToLogin, onSuccess }: { onBackToLogin: () => void; o
               helperText="Minimum 6 characters"
             />
 
-            <Button type="submit" fullWidth disabled={loading}>
+            <div className="space-y-3 pt-2">
+              <label className="flex items-start space-x-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={termsAccepted}
+                  onChange={(e) => setTermsAccepted(e.target.checked)}
+                  className="mt-1 w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
+                  required
+                />
+                <span className="text-sm text-gray-700 dark:text-gray-300">
+                  I accept the{' '}
+                  <a
+                    href="/terms"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
+                  >
+                    Terms of Service
+                  </a>
+                  <span className="text-red-600 dark:text-red-400 ml-1">*</span>
+                </span>
+              </label>
+
+              <label className="flex items-start space-x-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={privacyAccepted}
+                  onChange={(e) => setPrivacyAccepted(e.target.checked)}
+                  className="mt-1 w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
+                  required
+                />
+                <span className="text-sm text-gray-700 dark:text-gray-300">
+                  I accept the{' '}
+                  <a
+                    href="/privacy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
+                  >
+                    Privacy Policy
+                  </a>
+                  <span className="text-red-600 dark:text-red-400 ml-1">*</span>
+                </span>
+              </label>
+
+              <label className="flex items-start space-x-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={marketingConsent}
+                  onChange={(e) => setMarketingConsent(e.target.checked)}
+                  className="mt-1 w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
+                />
+                <span className="text-sm text-gray-700 dark:text-gray-300">
+                  I would like to receive marketing emails about new features and updates (optional)
+                </span>
+              </label>
+            </div>
+
+            <Button type="submit" fullWidth disabled={loading || !termsAccepted || !privacyAccepted}>
               {loading ? 'Creating account...' : 'Sign Up'}
             </Button>
           </form>
