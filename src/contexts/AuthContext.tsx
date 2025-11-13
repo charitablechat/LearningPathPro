@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase, Profile } from '../lib/supabase';
+import { logger } from '../lib/logger';
 
 interface AuthContextType {
   user: User | null;
@@ -23,31 +24,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log('[AUTH] Initializing auth context...');
+    logger.debug('[AUTH] Initializing auth context');
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('[AUTH] Session retrieved:', session ? 'User logged in' : 'No user');
+      logger.debug('[AUTH] Session retrieved', { hasSession: !!session });
       setUser(session?.user ?? null);
       if (session?.user) {
-        console.log('[AUTH] Loading profile for user:', session.user.id);
+        logger.debug('[AUTH] Loading profile for user', { userId: session.user.id });
         loadProfile(session.user.id);
       } else {
-        console.log('[AUTH] No session, setting loading to false');
+        logger.debug('[AUTH] No session, setting loading to false');
         setLoading(false);
       }
     }).catch(error => {
-      console.error('[AUTH] Error getting session:', error);
+      logger.error('[AUTH] Error getting session', error);
       setLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       (() => {
-        console.log('[AUTH] Auth state changed:', _event);
+        logger.debug('[AUTH] Auth state changed', { event: _event });
         setUser(session?.user ?? null);
         if (session?.user) {
-          console.log('[AUTH] User logged in, loading profile:', session.user.id);
+          logger.debug('[AUTH] User logged in, loading profile', { userId: session.user.id });
           loadProfile(session.user.id);
         } else {
-          console.log('[AUTH] User logged out');
+          logger.debug('[AUTH] User logged out');
           setProfile(null);
           setLoading(false);
         }
@@ -58,14 +59,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const loadProfile = async (userId: string, skipLoadingState = false, retryCount = 0, maxRetries = 5) => {
-    console.log('[AUTH] loadProfile called for userId:', userId, 'skipLoadingState:', skipLoadingState, 'retry:', retryCount);
+    logger.debug('[AUTH] loadProfile called', { userId, skipLoadingState, retryCount });
 
     if (!skipLoadingState) {
       setLoading(true);
     }
 
     try {
-      console.log('[AUTH] Fetching profile from database...');
+      logger.debug('[AUTH] Fetching profile from database');
       const startTime = Date.now();
 
       const { data, error } = await supabase
@@ -75,14 +76,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .maybeSingle();
 
       const endTime = Date.now();
-      console.log(`[AUTH] Query completed in ${endTime - startTime}ms`);
+      logger.debug('[AUTH] Query completed', { duration: `${endTime - startTime}ms` });
 
       if (error) {
-        console.error('[AUTH] Error loading profile:', {
+        logger.error('[AUTH] Error loading profile', error, {
           code: error.code,
           message: error.message,
-          details: error.details,
-          hint: error.hint,
         });
         setProfile(null);
         if (!skipLoadingState) {
@@ -92,20 +91,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (!data && retryCount < maxRetries) {
-        console.log(`[AUTH] Profile not found, retrying in ${500 * (retryCount + 1)}ms (attempt ${retryCount + 1}/${maxRetries})`);
-        await new Promise(resolve => setTimeout(resolve, 500 * (retryCount + 1)));
+        const waitTime = 500 * (retryCount + 1);
+        logger.debug('[AUTH] Profile not found, retrying', { waitTime, attempt: retryCount + 1, maxRetries });
+        await new Promise(resolve => setTimeout(resolve, waitTime));
         return loadProfile(userId, skipLoadingState, retryCount + 1, maxRetries);
       }
 
-      console.log('[AUTH] Profile loaded successfully:', data ? 'Profile found' : 'No profile');
-      console.log('[AUTH] Profile data:', data);
+      logger.debug('[AUTH] Profile loaded successfully', { hasProfile: !!data });
       setProfile(data);
       if (!skipLoadingState) {
         setLoading(false);
       }
       return data;
     } catch (error: any) {
-      console.error('[AUTH] Exception in loadProfile:', error);
+      logger.error('[AUTH] Exception in loadProfile', error);
       setProfile(null);
       if (!skipLoadingState) {
         setLoading(false);
@@ -158,7 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     if (data.user && data.session) {
-      console.log('[AUTH] User signed up and session created, loading profile with retry...');
+      logger.debug('[AUTH] User signed up and session created, loading profile with retry');
       setUser(data.user);
       await loadProfile(data.user.id, false, 0, 5);
     }
@@ -215,9 +214,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refetchProfile = async () => {
     if (user) {
-      console.log('[AUTH] refetchProfile: Starting profile refetch for user:', user.id);
+      logger.debug('[AUTH] refetchProfile: Starting profile refetch', { userId: user.id });
       const profile = await loadProfile(user.id, true);
-      console.log('[AUTH] refetchProfile: Profile refetch completed, profile:', profile);
+      logger.debug('[AUTH] refetchProfile: Profile refetch completed', { hasProfile: !!profile });
       return profile;
     }
     return null;

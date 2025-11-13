@@ -1,13 +1,31 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.57.4';
 import Stripe from 'npm:stripe@14.10.0';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info, Apikey, stripe-signature',
-};
+const ALLOWED_ORIGINS = [
+  'http://localhost:5173',
+  'http://localhost:4173',
+  'https://lmnpzfafwslxeqmdrucx.supabase.co',
+];
+
+const isDevelopment = Deno.env.get('DENO_DEPLOYMENT_ID') === undefined;
+
+function getCorsHeaders(origin: string | null): Record<string, string> {
+  const allowedOrigin = isDevelopment
+    ? '*'
+    : (origin && ALLOWED_ORIGINS.includes(origin)) ? origin : ALLOWED_ORIGINS[0];
+
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info, Apikey, stripe-signature',
+    'Access-Control-Max-Age': '86400',
+  };
+}
 
 Deno.serve(async (req: Request) => {
+  const origin = req.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
+
   if (req.method === 'OPTIONS') {
     return new Response(null, {
       status: 200,
@@ -45,7 +63,9 @@ Deno.serve(async (req: Request) => {
     const body = await req.text();
     const event = stripe.webhooks.constructEvent(body, signature, stripeWebhookSecret);
 
-    console.log('Webhook event type:', event.type);
+    if (isDevelopment) {
+      console.log('Webhook event type:', event.type);
+    }
 
     switch (event.type) {
       case 'checkout.session.completed': {
@@ -55,7 +75,9 @@ Deno.serve(async (req: Request) => {
         const billingCycle = session.metadata?.billing_cycle || 'monthly';
 
         if (!organizationId || !planId) {
-          console.error('Missing metadata in checkout session');
+          if (isDevelopment) {
+            console.error('Missing metadata in checkout session');
+          }
           break;
         }
 
@@ -77,7 +99,9 @@ Deno.serve(async (req: Request) => {
           });
 
         if (subError) {
-          console.error('Error creating subscription:', subError);
+          if (isDevelopment) {
+            console.error('Error creating subscription:', subError);
+          }
         }
 
         const { error: orgError } = await supabase
@@ -89,7 +113,9 @@ Deno.serve(async (req: Request) => {
           .eq('id', organizationId);
 
         if (orgError) {
-          console.error('Error updating organization:', orgError);
+          if (isDevelopment) {
+            console.error('Error updating organization:', orgError);
+          }
         }
 
         break;
@@ -110,7 +136,9 @@ Deno.serve(async (req: Request) => {
           .eq('stripe_subscription_id', stripeSubId);
 
         if (error) {
-          console.error('Error updating subscription:', error);
+          if (isDevelopment) {
+            console.error('Error updating subscription:', error);
+          }
         }
 
         const { data: subData } = await supabase
@@ -207,7 +235,9 @@ Deno.serve(async (req: Request) => {
       }
 
       default:
-        console.log('Unhandled event type:', event.type);
+        if (isDevelopment) {
+          console.log('Unhandled event type:', event.type);
+        }
     }
 
     return new Response(
@@ -218,9 +248,15 @@ Deno.serve(async (req: Request) => {
       }
     );
   } catch (err) {
-    console.error('Webhook error:', err);
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+    const corsHeaders = getCorsHeaders(req.headers.get('origin'));
+
+    if (isDevelopment) {
+      console.error('Webhook error:', errorMessage);
+    }
+
     return new Response(
-      JSON.stringify({ error: err instanceof Error ? err.message : 'Unknown error' }),
+      JSON.stringify({ error: 'Webhook processing failed' }),
       {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

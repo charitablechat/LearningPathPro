@@ -22,6 +22,7 @@ import { RefundPolicyPage } from './pages/RefundPolicyPage';
 import { CookiePolicyPage } from './pages/CookiePolicyPage';
 import { CookieConsent } from './components/CookieConsent';
 import { getPath, navigateTo } from './lib/router';
+import { logger } from './lib/logger';
 
 function AppContent() {
   const { user, profile, loading } = useAuth();
@@ -29,7 +30,7 @@ function AppContent() {
   const [viewingCourse, setViewingCourse] = useState<{ id: string; name: string } | null>(null);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
 
-  console.log('[APP] Render - loading:', loading, 'user:', !!user, 'profile:', !!profile, 'path:', currentPath);
+  logger.debug('[APP] Render state', { loading, hasUser: !!user, hasProfile: !!profile, path: currentPath });
 
   useEffect(() => {
     const handleRouteChange = () => {
@@ -47,7 +48,7 @@ function AppContent() {
   useEffect(() => {
     if (loading) {
       const timeout = setTimeout(() => {
-        console.warn('[APP] Loading timeout reached after 15 seconds');
+        logger.warn('[APP] Loading timeout reached after 15 seconds');
         setLoadingTimeout(true);
       }, 15000);
 
@@ -100,9 +101,9 @@ function AppContent() {
   }
 
   if (user && profile && !profile.organization_id && currentPath !== '/organization/signup' && currentPath !== '/login' && !profile.is_super_admin) {
-    console.log('[APP] User has no organization, redirecting to signup if not already there');
+    logger.debug('[APP] User has no organization, redirecting to signup', { currentPath });
     if (currentPath !== '/organization/signup') {
-      console.log('[APP] Navigating to /organization/signup');
+      logger.debug('[APP] Navigating to /organization/signup');
       setTimeout(() => navigateTo('/organization/signup'), 0);
     }
     return <OrganizationSignupPage />;
@@ -113,7 +114,7 @@ function AppContent() {
   }
 
   if (currentPath === '/' && user && profile && profile.organization_id) {
-    console.log('[APP] User on root with organization, redirecting to dashboard');
+    logger.debug('[APP] User on root with organization, redirecting to dashboard');
     navigateTo('/dashboard');
     return null;
   }
