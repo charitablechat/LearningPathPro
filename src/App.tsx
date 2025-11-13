@@ -26,7 +26,13 @@ import { AboutPage } from './pages/AboutPage';
 import { ContactPage } from './pages/ContactPage';
 import { FAQPage } from './pages/FAQPage';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { HelpCenterPage } from './pages/HelpCenterPage';
+import { GettingStartedPage } from './pages/GettingStartedPage';
+import { TutorialsPage } from './pages/TutorialsPage';
+import { SupportTicketsPage } from './pages/SupportTicketsPage';
+import { AdminGuidePage } from './pages/AdminGuidePage';
 import { CookieConsent } from './components/CookieConsent';
+import { HelpWidget } from './components/HelpWidget';
 import { getPath, navigateTo } from './lib/router';
 import { logger } from './lib/logger';
 
@@ -99,7 +105,7 @@ function AppContent() {
     );
   }
 
-  const publicRoutes = ['/', '/pricing', '/login', '/signup', '/reset-password', '/terms', '/privacy', '/refunds', '/cookies', '/features', '/about', '/contact', '/faq'];
+  const publicRoutes = ['/', '/pricing', '/login', '/signup', '/reset-password', '/terms', '/privacy', '/refunds', '/cookies', '/features', '/about', '/contact', '/faq', '/help', '/getting-started', '/tutorials'];
   const isPublicRoute = publicRoutes.includes(currentPath);
 
   if (!user && !isPublicRoute) {
@@ -173,6 +179,22 @@ function AppContent() {
     return <FAQPage />;
   }
 
+  if (currentPath === '/help') {
+    return <HelpCenterPage />;
+  }
+
+  if (currentPath === '/getting-started') {
+    return <GettingStartedPage />;
+  }
+
+  if (currentPath === '/tutorials') {
+    return <TutorialsPage />;
+  }
+
+  if (currentPath === '/admin-guide') {
+    return <AdminGuidePage />;
+  }
+
   if (currentPath === '/organization/signup') {
     return <OrganizationSignupPage />;
   }
@@ -225,11 +247,16 @@ function AppContent() {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
         <Navbar onProfileClick={() => navigateTo('/dashboard')} />
         <ProfilePage onBack={() => navigateTo('/dashboard')} />
+        <HelpWidget />
       </div>
     );
   }
 
-  if (!publicRoutes.includes(currentPath) && currentPath !== '/dashboard' && currentPath !== '/settings' && currentPath !== '/super-admin' && currentPath !== '/profile') {
+  if (currentPath === '/support-tickets') {
+    return <SupportTicketsPage />;
+  }
+
+  if (!publicRoutes.includes(currentPath) && currentPath !== '/dashboard' && currentPath !== '/settings' && currentPath !== '/super-admin' && currentPath !== '/profile' && currentPath !== '/support-tickets' && currentPath !== '/admin-guide') {
     return <NotFoundPage />;
   }
 
@@ -240,6 +267,7 @@ function AppContent() {
       {profile.role === 'instructor' && <InstructorDashboard onViewCourse={setViewingCourse} />}
       {profile.role === 'admin' && <EnhancedAdminDashboard onViewCourse={setViewingCourse} />}
       <CookieConsent />
+      <HelpWidget />
     </div>
   );
 }

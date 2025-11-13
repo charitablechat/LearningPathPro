@@ -8,6 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useOrganization } from '../contexts/OrganizationContext';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
+import { Tooltip } from '../components/Tooltip';
 import { AdminCourseManagement } from './AdminCourseManagement';
 import { AdminContentLibrary } from './AdminContentLibrary';
 import { AdminAnalytics } from './AdminAnalytics';
@@ -140,8 +141,11 @@ export function EnhancedAdminDashboard({ onViewCourse }: EnhancedAdminDashboardP
             <div className="p-3 bg-blue-600 rounded-lg">
               <BookOpen className="w-8 h-8 text-white" />
             </div>
-            <div>
-              <p className="text-gray-400 text-sm">Total Courses</p>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <p className="text-gray-400 text-sm">Total Courses</p>
+                <Tooltip content="All courses in your organization, including published and draft courses. Click to manage courses." />
+              </div>
               <p className="text-3xl font-bold text-white">{stats.totalCourses}</p>
             </div>
           </div>

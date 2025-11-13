@@ -3,32 +3,65 @@ import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { Card } from '../components/Card';
 import { navigateTo } from '../lib/router';
+import { useAuth } from '../contexts/AuthContext';
+import { useOrganization } from '../contexts/OrganizationContext';
+import { supabase } from '../lib/supabase';
 import { Mail, MessageSquare, HelpCircle, Send } from 'lucide-react';
 
 export function ContactPage() {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const { user, profile } = useAuth();
+  const { organization } = useOrganization();
+  const [name, setName] = useState(profile?.full_name || '');
+  const [email, setEmail] = useState(profile?.email || '');
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
+  const [category, setCategory] = useState('general');
+  const [priority, setPriority] = useState('normal');
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
 
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      const { error: ticketError } = await supabase
+        .from('support_tickets')
+        .insert({
+          organization_id: organization?.id || null,
+          user_id: user?.id || null,
+          subject: subject.trim(),
+          message: message.trim(),
+          category,
+          priority,
+          user_email: email.trim(),
+          user_name: name.trim(),
+          status: 'open'
+        });
 
-    setSubmitted(true);
-    setLoading(false);
-    setName('');
-    setEmail('');
-    setSubject('');
-    setMessage('');
+      if (ticketError) throw ticketError;
 
-    setTimeout(() => {
-      setSubmitted(false);
-    }, 5000);
+      setSubmitted(true);
+      setSubject('');
+      setMessage('');
+      setCategory('general');
+      setPriority('normal');
+
+      setTimeout(() => {
+        if (user) {
+          navigateTo('/support-tickets');
+        } else {
+          setSubmitted(false);
+        }
+      }, 3000);
+    } catch (err) {
+      console.error('Error creating ticket:', err);
+      setError('Failed to submit your request. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -111,8 +144,16 @@ export function ContactPage() {
           {submitted && (
             <div className="mb-6 p-4 bg-green-600/20 border border-green-600/50 rounded-lg">
               <p className="text-green-400 text-center">
-                Thank you for your message! We'll get back to you soon.
+                {user
+                  ? 'Thank you! Your support ticket has been created. Redirecting to your tickets...'
+                  : 'Thank you for your message! We\'ll get back to you soon.'}
               </p>
+            </div>
+          )}
+
+          {error && (
+            <div className="mb-6 p-4 bg-red-600/20 border border-red-600/50 rounded-lg">
+              <p className="text-red-400 text-center">{error}</p>
             </div>
           )}
 
@@ -129,6 +170,7 @@ export function ContactPage() {
                   onChange={(e) => setName(e.target.value)}
                   required
                   placeholder="Your name"
+                  disabled={!!profile}
                 />
               </div>
 
@@ -143,7 +185,44 @@ export function ContactPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   placeholder="your@email.com"
+                  disabled={!!profile}
                 />
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <label htmlFor="category" className="block text-sm font-medium text-slate-300 mb-2">
+                  Category
+                </label>
+                <select
+                  id="category"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                >
+                  <option value="general">General Inquiry</option>
+                  <option value="technical">Technical Issue</option>
+                  <option value="billing">Billing Question</option>
+                  <option value="feature_request">Feature Request</option>
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="priority" className="block text-sm font-medium text-slate-300 mb-2">
+                  Priority
+                </label>
+                <select
+                  id="priority"
+                  value={priority}
+                  onChange={(e) => setPriority(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                >
+                  <option value="low">Low</option>
+                  <option value="normal">Normal</option>
+                  <option value="high">High</option>
+                  <option value="urgent">Urgent</option>
+                </select>
               </div>
             </div>
 
