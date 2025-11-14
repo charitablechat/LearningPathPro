@@ -180,7 +180,7 @@ export function FAQPage() {
         {faqs.map((section, sectionIndex) => (
           <div key={sectionIndex} className="mb-12">
             <h2 className="text-3xl font-bold text-white mb-6">{section.category}</h2>
-            {section.questions.map((faq, questionIndex) => {
+            {section.questions.map((faq) => {
               const currentIndex = globalIndex++;
               return (
                 <FAQItem

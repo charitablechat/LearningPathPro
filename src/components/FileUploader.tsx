@@ -1,5 +1,5 @@
 import { useState, useRef, DragEvent, ChangeEvent } from 'react';
-import { Upload, X, File, Image, Video, FileText, Loader2 } from 'lucide-react';
+import { Upload, X, Image, Video, FileText, Loader2 } from 'lucide-react';
 import { Button } from './Button';
 
 export type FileType = 'video' | 'image' | 'document';

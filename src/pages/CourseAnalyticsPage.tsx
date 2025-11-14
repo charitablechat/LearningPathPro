@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Users, CheckCircle, Clock, TrendingUp, User, Eye } from 'lucide-react';
+import { ArrowLeft, Users, CheckCircle, Clock, TrendingUp, User, Eye, Circle } from 'lucide-react';
 import { supabase, Profile, Module, Lesson, LessonProgress } from '../lib/supabase';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';

@@ -1,10 +1,10 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import { Organization, getOrganization, checkFeatureLimit } from '../lib/organization';
-import { supabase } from '../lib/supabase';
 
 interface OrganizationContextType {
   organization: Organization | null;
+  currentOrganization: Organization | null;
   loading: boolean;
   refetchOrganization: () => Promise<void>;
   canCreateCourse: () => Promise<boolean>;
@@ -17,7 +17,7 @@ interface OrganizationContextType {
 const OrganizationContext = createContext<OrganizationContextType | undefined>(undefined);
 
 export function OrganizationProvider({ children }: { children: ReactNode }) {
-  const { user, profile } = useAuth();
+  const { profile } = useAuth();
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -63,10 +63,11 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
     return result.allowed;
   };
 
-  const isTrialExpired =
+  const isTrialExpired = Boolean(
     organization?.subscription_status === 'trial' &&
     organization?.trial_ends_at &&
-    new Date(organization.trial_ends_at) < new Date();
+    new Date(organization.trial_ends_at) < new Date()
+  );
 
   const isSubscriptionActive =
     organization?.subscription_status === 'active' || organization?.subscription_status === 'lifetime';
@@ -75,6 +76,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
     <OrganizationContext.Provider
       value={{
         organization,
+        currentOrganization: organization,
         loading,
         refetchOrganization: fetchOrganization,
         canCreateCourse,

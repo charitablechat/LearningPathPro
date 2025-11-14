@@ -1,6 +1,6 @@
 import { Button } from '../components/Button';
 import { navigateTo } from '../lib/router';
-import { Home, Search, ArrowLeft } from 'lucide-react';
+import { Home, ArrowLeft } from 'lucide-react';
 
 export function NotFoundPage() {
   return (

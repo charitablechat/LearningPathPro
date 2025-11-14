@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import {
   Users, BookOpen, TrendingUp, Settings, BarChart, Library,
-  MessageSquare, CreditCard, ArrowLeft, Bell
+  CreditCard, ArrowLeft, Bell
 } from 'lucide-react';
-import { supabase, Profile, Course } from '../lib/supabase';
+import { supabase, Course } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useOrganization } from '../contexts/OrganizationContext';
 import { Card } from '../components/Card';
@@ -40,7 +40,7 @@ interface EnhancedAdminDashboardProps {
 }
 
 export function EnhancedAdminDashboard({ onViewCourse }: EnhancedAdminDashboardProps) {
-  const { user } = useAuth();
+  useAuth();
   const { organization } = useOrganization();
   const [stats, setStats] = useState<Stats>({
     totalUsers: 0,
@@ -305,7 +305,7 @@ export function EnhancedAdminDashboard({ onViewCourse }: EnhancedAdminDashboardP
         {currentView === 'overview' && renderOverview()}
         {currentView === 'courses' && (
           <AdminCourseManagement
-            onEditCourse={(course) => setEditingCourse(course as Course)}
+            onEditCourse={(course) => setEditingCourse(course as unknown as Course)}
             onViewCourse={onViewCourse}
             onCreateCourse={() => setShowCreateCourse(true)}
           />

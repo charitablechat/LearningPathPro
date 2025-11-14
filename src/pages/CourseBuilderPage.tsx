@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, GripVertical, ChevronLeft, Save, Link as LinkIcon } from 'lucide-react';
+import { Plus, Trash2, GripVertical, ChevronLeft, Link as LinkIcon } from 'lucide-react';
 import { supabase, Module, Lesson } from '../lib/supabase';
 import { useOrganization } from '../contexts/OrganizationContext';
 import { uploadFile, deleteFile, UploadProgress } from '../lib/storage';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
-import { FileUploader, FileType } from '../components/FileUploader';
+import { FileUploader } from '../components/FileUploader';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useConfirm } from '../hooks/useConfirm';
 import { useToast } from '../hooks/useToast';

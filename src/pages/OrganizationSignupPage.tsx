@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { createOrganization, slugify, validatePromoCode, redeemPromoCode } from '../lib/organization';
 import { supabase } from '../lib/supabase';
-import { navigateTo, getPath } from '../lib/router';
+import { navigateTo } from '../lib/router';
 import { Card } from '../components/Card';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';

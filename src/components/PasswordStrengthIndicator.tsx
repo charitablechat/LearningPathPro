@@ -1,4 +1,4 @@
-import { CheckCircle2, Circle } from 'lucide-react';
+import { Circle } from 'lucide-react';
 import { getPasswordStrength } from '../lib/validation';
 
 interface PasswordStrengthIndicatorProps {

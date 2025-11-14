@@ -13,7 +13,7 @@ interface Step {
 }
 
 export function GettingStartedPage() {
-  const [currentStep, setCurrentStep] = useState(0);
+  useState(0);
   const [steps, setSteps] = useState<Step[]>([
     {
       id: 1,

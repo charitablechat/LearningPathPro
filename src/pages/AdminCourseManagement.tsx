@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, CreditCard as Edit2, Trash2, Copy, Eye, CheckCircle, XCircle, Archive, Search, Filter } from 'lucide-react';
+import { Plus, CreditCard as Edit2, Trash2, Copy, Eye, CheckCircle, Archive, Search } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useOrganization } from '../contexts/OrganizationContext';
 import { Card } from '../components/Card';
@@ -27,7 +27,7 @@ interface AdminCourseManagementProps {
   onCreateCourse: () => void;
 }
 
-export function AdminCourseManagement({ onEditCourse, onViewCourse, onCreateCourse }: AdminCourseManagementProps) {
+export function AdminCourseManagement({ onViewCourse, onCreateCourse }: AdminCourseManagementProps) {
   const { organization } = useOrganization();
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);

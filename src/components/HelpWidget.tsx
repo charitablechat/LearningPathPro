@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { HelpCircle, X, BookOpen, MessageSquare, Video, FileText, ExternalLink } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { navigateTo } from '../lib/router';
-import { Button } from './Button';
 import { Card } from './Card';
 
 export function HelpWidget() {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Shield, Building2, Users, CreditCard, TrendingUp, Search, UserCog, Settings, Tag, AlertCircle, CheckCircle, XCircle, Edit2, Trash2 } from 'lucide-react';
+import { Shield, Building2, Users, CreditCard, TrendingUp, Search, UserCog, Tag, CheckCircle, XCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { Card } from '../components/Card';
 import { Input } from '../components/Input';
@@ -11,7 +11,7 @@ type TabView = 'overview' | 'users' | 'organizations' | 'subscriptions' | 'promo
 
 export function SuperAdminDashboard() {
   const { profile } = useAuth();
-  const { showToast } = useToast();
+  const { success: showToast } = useToast();
   const [currentTab, setCurrentTab] = useState<TabView>('overview');
   const [organizations, setOrganizations] = useState<any[]>([]);
   const [allUsers, setAllUsers] = useState<Profile[]>([]);
@@ -86,15 +86,15 @@ export function SuperAdminDashboard() {
 
       if (data && typeof data === 'object' && 'success' in data) {
         if (data.success) {
-          showToast('User promoted to superadmin successfully', 'success');
+          showToast('User promoted to superadmin successfully');
           await fetchData();
         } else {
-          showToast(data.error || 'Failed to promote user', 'error');
+          showToast(data.error || 'Failed to promote user');
         }
       }
     } catch (error: any) {
       console.error('Error promoting user:', error);
-      showToast(error.message || 'Failed to promote user to superadmin', 'error');
+      showToast(error.message || 'Failed to promote user to superadmin');
     }
   };
 
@@ -108,15 +108,15 @@ export function SuperAdminDashboard() {
 
       if (data && typeof data === 'object' && 'success' in data) {
         if (data.success) {
-          showToast('User demoted from superadmin successfully', 'success');
+          showToast('User demoted from superadmin successfully');
           await fetchData();
         } else {
-          showToast(data.error || 'Failed to demote user', 'error');
+          showToast(data.error || 'Failed to demote user');
         }
       }
     } catch (error: any) {
       console.error('Error demoting user:', error);
-      showToast(error.message || 'Failed to demote user from superadmin', 'error');
+      showToast(error.message || 'Failed to demote user from superadmin');
     }
   };
 
@@ -529,10 +529,6 @@ function SuperAdminsTab({ superAdmins, allUsers, loading, onPromote, onDemote }:
 
   const nonSuperAdminUsers = allUsers.filter((u: Profile) => !u.is_super_admin);
 
-  const handlePromote = (user: Profile) => {
-    setSelectedUser(user);
-    setShowPromoteModal(true);
-  };
 
   const confirmPromote = () => {
     if (selectedUser) {

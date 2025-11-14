@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
-import { CreditCard, TrendingUp, AlertCircle, CheckCircle, Download, Calendar } from 'lucide-react';
+import { CreditCard, AlertCircle, CheckCircle, Download, Calendar } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useOrganization } from '../contexts/OrganizationContext';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
-import { ProgressRing } from '../components/ProgressRing';
 
 interface Subscription {
   id: string;

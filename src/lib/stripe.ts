@@ -37,13 +37,6 @@ export const createCheckoutSession = async (params: CheckoutSessionParams) => {
 };
 
 export const redirectToCheckout = async (sessionId: string) => {
-  const stripe = await getStripe();
-  if (!stripe) {
-    throw new Error('Stripe failed to initialize');
-  }
-
-  const { error } = await stripe.redirectToCheckout({ sessionId });
-  if (error) {
-    throw error;
-  }
+  const checkoutUrl = `https://checkout.stripe.com/c/pay/${sessionId}`;
+  window.location.href = checkoutUrl;
 };

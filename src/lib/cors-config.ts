@@ -5,7 +5,7 @@ export const ALLOWED_ORIGINS = [
 ];
 
 export function getCorsHeaders(origin?: string | null): Record<string, string> {
-  const isDevelopment = Deno.env.get('DENO_DEPLOYMENT_ID') === undefined;
+  const isDevelopment = typeof window !== 'undefined' || process.env.NODE_ENV === 'development';
 
   const allowedOrigin = isDevelopment
     ? '*'

@@ -2,9 +2,9 @@ import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { navigateTo } from '../lib/router';
 import {
-  Zap, Users, TrendingUp, Shield, GraduationCap, Sparkles,
+  Zap, Users, TrendingUp, Shield,
   Video, FileText, BarChart3, Cloud, Lock, Smartphone,
-  Globe, Palette, MessageSquare, Award, Clock, Repeat
+  Palette, MessageSquare, Award, Clock, Repeat
 } from 'lucide-react';
 
 export function FeaturesPage() {

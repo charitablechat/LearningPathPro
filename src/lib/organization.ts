@@ -286,8 +286,8 @@ export async function checkFeatureLimit(
       .eq('organization_id', organizationId)
       .maybeSingle();
 
-    if (redemption?.promo_code?.lifetime_plan_limits) {
-      const limits = redemption.promo_code.lifetime_plan_limits;
+    if (redemption?.promo_code && Array.isArray(redemption.promo_code) && redemption.promo_code.length > 0) {
+      const limits = redemption.promo_code[0].lifetime_plan_limits;
       const usage = await getOrganizationUsage(organizationId);
       const maxKey = `max_${feature}`;
       const max = limits[maxKey] || null;

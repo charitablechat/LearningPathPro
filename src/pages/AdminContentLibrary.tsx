@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, CreditCard as Edit2, Copy, Search, Filter, Video, FileText, File } from 'lucide-react';
+import { Plus, Trash2, CreditCard as Edit2, Copy, Search, Video, FileText, File } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useOrganization } from '../contexts/OrganizationContext';
 import { Card } from '../components/Card';

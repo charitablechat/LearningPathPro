@@ -25,7 +25,7 @@ interface TicketResponse {
 }
 
 export function SupportTicketsPage() {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
   const [responses, setResponses] = useState<TicketResponse[]>([]);

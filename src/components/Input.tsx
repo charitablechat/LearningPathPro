@@ -1,4 +1,4 @@
-import { InputHTMLAttributes, forwardRef, useState } from 'react';
+import { InputHTMLAttributes, forwardRef, useState, ReactNode } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -6,10 +6,11 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   error?: string;
   helperText?: string;
   showPasswordToggle?: boolean;
+  icon?: ReactNode;
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, helperText, className = '', type, showPasswordToggle, ...props }, ref) => {
+  ({ label, error, helperText, className = '', type, showPasswordToggle, icon, ...props }, ref) => {
     const [showPassword, setShowPassword] = useState(false);
     const isPasswordField = type === 'password';
     const inputType = isPasswordField && showPassword ? 'text' : type;
@@ -22,6 +23,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           </label>
         )}
         <div className="relative">
+          {icon && (
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">
+              {icon}
+            </div>
+          )}
           <input
             ref={ref}
             type={inputType}
@@ -29,7 +35,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
               error ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'
             } rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
               isPasswordField && showPasswordToggle !== false ? 'pr-12' : ''
-            } ${className}`}
+            } ${icon ? 'pl-10' : ''} ${className}`}
             {...props}
           />
           {isPasswordField && showPasswordToggle !== false && (

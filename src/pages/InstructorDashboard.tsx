@@ -23,7 +23,7 @@ interface InstructorDashboardProps {
 
 export function InstructorDashboard({ onViewCourse }: InstructorDashboardProps) {
   const { user } = useAuth();
-  const { organization } = useOrganization();
+  useOrganization();
   const [courses, setCourses] = useState<CourseWithStats[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);

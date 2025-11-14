@@ -10,7 +10,7 @@ export interface TermsAcceptance {
 
 export async function acceptLegalTerms(acceptance: TermsAcceptance): Promise<{ success: boolean; error?: string }> {
   try {
-    const { data, error } = await supabase.rpc('accept_legal_terms', {
+    const { error } = await supabase.rpc('accept_legal_terms', {
       p_terms_accepted: acceptance.termsAccepted,
       p_privacy_accepted: acceptance.privacyAccepted,
       p_marketing_consent: acceptance.marketingConsent,

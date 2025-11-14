@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Building2, Palette, Globe, CreditCard, Users as UsersIcon, Save } from 'lucide-react';
+import { Building2, Palette, CreditCard, Users as UsersIcon, Save } from 'lucide-react';
 import { useOrganization } from '../contexts/OrganizationContext';
 import { useAuth } from '../contexts/AuthContext';
 import { updateOrganization, getOrganizationSubscription, getOrganizationUsage } from '../lib/organization';
@@ -12,7 +12,7 @@ import { supabase } from '../lib/supabase';
 export function OrganizationSettingsPage() {
   const { organization, refetchOrganization } = useOrganization();
   const { profile } = useAuth();
-  const { showToast } = useToast();
+  const { success: showToast } = useToast();
 
   const [activeTab, setActiveTab] = useState<'general' | 'branding' | 'subscription' | 'team'>('general');
   const [name, setName] = useState('');
@@ -65,10 +65,10 @@ export function OrganizationSettingsPage() {
     setLoading(false);
 
     if (updated) {
-      showToast('Organization settings updated successfully', 'success');
+      showToast('Organization settings updated successfully');
       await refetchOrganization();
     } else {
-      showToast('Failed to update organization settings', 'error');
+      showToast('Failed to update organization settings');
     }
   };
 
@@ -83,16 +83,16 @@ export function OrganizationSettingsPage() {
     setLoading(false);
 
     if (updated) {
-      showToast('Branding updated successfully', 'success');
+      showToast('Branding updated successfully');
       await refetchOrganization();
     } else {
-      showToast('Failed to update branding', 'error');
+      showToast('Failed to update branding');
     }
   };
 
   const handleInviteUser = async () => {
     if (!organization || !inviteEmail.trim()) {
-      showToast('Please enter an email address', 'error');
+      showToast('Please enter an email address');
       return;
     }
 
@@ -107,9 +107,9 @@ export function OrganizationSettingsPage() {
 
     if (error) {
       console.error('Error creating invitation:', error);
-      showToast('Failed to send invitation', 'error');
+      showToast('Failed to send invitation');
     } else {
-      showToast(`Invitation sent to ${inviteEmail}`, 'success');
+      showToast(`Invitation sent to ${inviteEmail}`);
       setInviteEmail('');
     }
   };

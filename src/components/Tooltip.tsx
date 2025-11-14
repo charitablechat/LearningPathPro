@@ -13,7 +13,6 @@ export function Tooltip({
   content,
   children,
   position = 'top',
-  showIcon = true,
   iconClassName = ''
 }: TooltipProps) {
   const [isVisible, setIsVisible] = useState(false);

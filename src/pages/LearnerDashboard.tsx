@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
-import { BookOpen, Clock, CheckCircle2, PlayCircle, TrendingUp, Search } from 'lucide-react';
+import { BookOpen, PlayCircle, TrendingUp, Search } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase, Course, Enrollment } from '../lib/supabase';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
-import { Input } from '../components/Input';
 import { CourseViewerPage } from './CourseViewerPage';
 import { useToast } from '../hooks/useToast';
 import { ToastContainer } from '../components/Toast';
