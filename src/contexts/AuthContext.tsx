@@ -119,15 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password,
     });
     if (error) {
-      if (error.message && error.message.includes('Email not confirmed')) {
-        throw new Error('EMAIL_NOT_CONFIRMED');
-      }
       throw new Error(error.message || 'Authentication failed');
-    }
-
-    if (data.user && !data.user.email_confirmed_at) {
-      await supabase.auth.signOut();
-      throw new Error('EMAIL_NOT_CONFIRMED');
     }
 
     if (data.user) {
@@ -150,10 +142,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (!data.user) {
       throw new Error('Sign up failed - no user data returned');
-    }
-
-    if (data.user && !data.user.confirmed_at) {
-      throw new Error('CONFIRMATION_REQUIRED');
     }
 
     if (data.user && data.session) {

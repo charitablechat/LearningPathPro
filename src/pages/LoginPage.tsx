@@ -31,9 +31,7 @@ export function LoginPage() {
     } catch (err: any) {
       let errorMessage = '';
 
-      if (err.message === 'EMAIL_NOT_CONFIRMED') {
-        errorMessage = 'Please check your email and confirm your account before signing in. Check your spam folder if you don\'t see the email.';
-      } else if (err.message && err.message.includes('Invalid login credentials')) {
+      if (err.message && err.message.includes('Invalid login credentials')) {
         errorMessage = 'Invalid email or password. Please try again.';
       } else if (err.message && typeof err.message === 'string' && err.message.trim()) {
         errorMessage = err.message;
@@ -47,8 +45,7 @@ export function LoginPage() {
   };
 
   const handleSignUpSuccess = () => {
-    setShowSignUp(false);
-    setSuccessMessage('Account created! Please check your email to confirm your account before signing in.');
+    navigateTo('/dashboard');
   };
 
   if (showSignUp) {
@@ -259,10 +256,7 @@ function SignUpPage({ onBackToLogin, onSuccess }: { onBackToLogin: () => void; o
     } catch (err: any) {
       let errorMessage = '';
 
-      if (err.message === 'CONFIRMATION_REQUIRED') {
-        onSuccess();
-        return;
-      } else if (err.message && err.message.includes('User already registered')) {
+      if (err.message && err.message.includes('User already registered')) {
         errorMessage = 'An account with this email already exists. Please sign in instead.';
       } else if (err.message && typeof err.message === 'string' && err.message.trim()) {
         errorMessage = err.message;
@@ -293,10 +287,6 @@ function SignUpPage({ onBackToLogin, onSuccess }: { onBackToLogin: () => void; o
                 {error}
               </div>
             )}
-
-            <div className="p-4 bg-blue-100 dark:bg-blue-900/50 border border-blue-300 dark:border-blue-700 rounded-lg text-blue-700 dark:text-blue-200 text-sm">
-              You will receive a confirmation email after signing up. Please check your email and confirm your account before signing in.
-            </div>
 
             <Input
               label="Full Name"
