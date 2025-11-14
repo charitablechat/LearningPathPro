@@ -119,10 +119,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password,
     });
     if (error) {
-      if (error.message.includes('Email not confirmed')) {
+      if (error.message && error.message.includes('Email not confirmed')) {
         throw new Error('EMAIL_NOT_CONFIRMED');
       }
-      throw error;
+      throw new Error(error.message || 'Authentication failed');
     }
 
     if (data.user && !data.user.email_confirmed_at) {

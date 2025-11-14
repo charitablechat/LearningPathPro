@@ -29,13 +29,19 @@ export function LoginPage() {
       showSuccess('Successfully signed in!');
       navigateTo('/dashboard');
     } catch (err: any) {
+      let errorMessage = '';
+
       if (err.message === 'EMAIL_NOT_CONFIRMED') {
-        setError('Please check your email and confirm your account before signing in. Check your spam folder if you don\'t see the email.');
-      } else if (err.message.includes('Invalid login credentials')) {
-        setError('Invalid email or password. Please try again.');
+        errorMessage = 'Please check your email and confirm your account before signing in. Check your spam folder if you don\'t see the email.';
+      } else if (err.message && err.message.includes('Invalid login credentials')) {
+        errorMessage = 'Invalid email or password. Please try again.';
+      } else if (err.message && typeof err.message === 'string' && err.message.trim()) {
+        errorMessage = err.message;
       } else {
-        setError(err.message || 'Failed to sign in');
+        errorMessage = 'Failed to sign in. Please check your credentials and try again.';
       }
+
+      setError(errorMessage);
       setLoading(false);
     }
   };
@@ -66,13 +72,13 @@ export function LoginPage() {
 
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 border border-gray-200 dark:border-gray-700">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {error && (
+            {error && error.trim() && (
               <div className="p-4 bg-red-100 dark:bg-red-900/50 border border-red-300 dark:border-red-700 rounded-lg text-red-700 dark:text-red-200 text-sm">
                 {error}
               </div>
             )}
 
-            {successMessage && (
+            {successMessage && successMessage.trim() && (
               <div className="p-4 bg-green-100 dark:bg-green-900/50 border border-green-300 dark:border-green-700 rounded-lg text-green-700 dark:text-green-200 text-sm">
                 {successMessage}
               </div>
@@ -147,7 +153,10 @@ function ForgotPasswordPage({ onBackToLogin }: { onBackToLogin: () => void }) {
       await resetPassword(email);
       setSuccess(true);
     } catch (err: any) {
-      setError(err.message || 'Failed to send password reset email');
+      const errorMessage = (err.message && typeof err.message === 'string' && err.message.trim())
+        ? err.message
+        : 'Failed to send password reset email';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -176,7 +185,7 @@ function ForgotPasswordPage({ onBackToLogin }: { onBackToLogin: () => void }) {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
-              {error && (
+              {error && error.trim() && (
                 <div className="p-4 bg-red-100 dark:bg-red-900/50 border border-red-300 dark:border-red-700 rounded-lg text-red-700 dark:text-red-200 text-sm">
                   {error}
                 </div>
@@ -248,13 +257,20 @@ function SignUpPage({ onBackToLogin, onSuccess }: { onBackToLogin: () => void; o
 
       onSuccess();
     } catch (err: any) {
+      let errorMessage = '';
+
       if (err.message === 'CONFIRMATION_REQUIRED') {
         onSuccess();
-      } else if (err.message.includes('User already registered')) {
-        setError('An account with this email already exists. Please sign in instead.');
+        return;
+      } else if (err.message && err.message.includes('User already registered')) {
+        errorMessage = 'An account with this email already exists. Please sign in instead.';
+      } else if (err.message && typeof err.message === 'string' && err.message.trim()) {
+        errorMessage = err.message;
       } else {
-        setError(err.message || 'Failed to sign up');
+        errorMessage = 'Failed to sign up. Please try again.';
       }
+
+      setError(errorMessage);
       setLoading(false);
     }
   };
@@ -272,7 +288,7 @@ function SignUpPage({ onBackToLogin, onSuccess }: { onBackToLogin: () => void; o
 
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 border border-gray-200 dark:border-gray-700">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {error && (
+            {error && error.trim() && (
               <div className="p-4 bg-red-100 dark:bg-red-900/50 border border-red-300 dark:border-red-700 rounded-lg text-red-700 dark:text-red-200 text-sm">
                 {error}
               </div>
