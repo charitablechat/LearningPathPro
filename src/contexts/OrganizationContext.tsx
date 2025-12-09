@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import { Organization, getOrganization, checkFeatureLimit } from '../lib/organization';
+import { logger } from '../lib/logger';
 
 interface OrganizationContextType {
   organization: Organization | null;
@@ -33,7 +34,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
       const org = await getOrganization(profile.organization_id);
       setOrganization(org);
     } catch (error) {
-      console.error('[ORG_CONTEXT] Error fetching organization:', error);
+      logger.error('Error fetching organization', error);
       setOrganization(null);
     } finally {
       setLoading(false);
@@ -41,7 +42,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    console.log('[ORG_CONTEXT] Effect triggered, profile?.organization_id:', profile?.organization_id);
+    logger.debug('Organization context effect triggered', { organizationId: profile?.organization_id });
     fetchOrganization();
   }, [profile?.organization_id]);
 

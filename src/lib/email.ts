@@ -1,3 +1,5 @@
+import { logger } from './logger';
+
 export interface EmailProvider {
   sendEmail(params: EmailParams): Promise<boolean>;
 }
@@ -36,7 +38,7 @@ class ResendProvider implements EmailProvider {
 
       return response.ok;
     } catch (error) {
-      console.error('Failed to send email via Resend:', error);
+      logger.error('Failed to send email via Resend', error);
       return false;
     }
   }
@@ -69,7 +71,7 @@ class SendGridProvider implements EmailProvider {
 
       return response.ok;
     } catch (error) {
-      console.error('Failed to send email via SendGrid:', error);
+      logger.error('Failed to send email via SendGrid', error);
       return false;
     }
   }

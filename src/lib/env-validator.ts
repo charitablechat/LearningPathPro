@@ -1,3 +1,5 @@
+import { logger } from './logger';
+
 interface EnvConfig {
   VITE_SUPABASE_URL: string;
   VITE_SUPABASE_ANON_KEY: string;
@@ -43,8 +45,8 @@ class EnvironmentValidator {
           'Stripe configuration is required in production. Please check your .env file.'
         );
       } else {
-        console.warn(
-          '⚠️  WARNING: VITE_STRIPE_PUBLISHABLE_KEY is not configured.\n' +
+        logger.warn(
+          'VITE_STRIPE_PUBLISHABLE_KEY is not configured. ' +
           'Payment features will not work until you add a valid Stripe key.'
         );
       }
@@ -68,15 +70,15 @@ class EnvironmentValidator {
     }
 
     if (this.isProduction && isTestKey) {
-      console.warn(
-        '⚠️  WARNING: Using Stripe TEST keys in production environment!\n' +
+      logger.warn(
+        'Using Stripe TEST keys in production environment! ' +
         'Please replace with live keys (pk_live_...) before deploying to production.'
       );
     }
 
     if (this.isDevelopment && isLiveKey) {
-      console.warn(
-        '⚠️  WARNING: Using Stripe LIVE keys in development environment!\n' +
+      logger.warn(
+        'Using Stripe LIVE keys in development environment! ' +
         'Consider using test keys (pk_test_...) for development.'
       );
     }
@@ -100,8 +102,8 @@ class EnvironmentValidator {
     }
 
     if (!url.includes('supabase.co')) {
-      console.warn(
-        '⚠️  WARNING: Supabase URL does not contain "supabase.co".\n' +
+      logger.warn(
+        'Supabase URL does not contain "supabase.co". ' +
         'Please verify this is a valid Supabase project URL.'
       );
     }
@@ -114,7 +116,7 @@ class EnvironmentValidator {
       this.validateSupabaseConfig();
     } catch (error) {
       if (error instanceof Error) {
-        console.error('❌ Environment Validation Error:', error.message);
+        logger.error('Environment validation error', error);
         throw error;
       }
       throw error;
@@ -135,5 +137,5 @@ export const envValidator = new EnvironmentValidator();
 if (import.meta.env.DEV) {
   envValidator.validateAll();
   const envInfo = envValidator.getEnvironmentInfo();
-  console.log('🔧 Environment:', envInfo.mode);
+  logger.info('Environment initialized', { mode: envInfo.mode });
 }

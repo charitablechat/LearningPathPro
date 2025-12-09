@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { logger } from './logger';
 
 export const CURRENT_TERMS_VERSION = '1.0';
 
@@ -18,13 +19,13 @@ export async function acceptLegalTerms(acceptance: TermsAcceptance): Promise<{ s
     });
 
     if (error) {
-      console.error('[LEGAL] Error accepting terms:', error);
+      logger.error('Error accepting legal terms', error);
       return { success: false, error: error.message };
     }
 
     return { success: true };
   } catch (err: any) {
-    console.error('[LEGAL] Exception accepting terms:', err);
+    logger.error('Exception accepting legal terms', err);
     return { success: false, error: err.message || 'Failed to record acceptance' };
   }
 }
@@ -43,7 +44,7 @@ export async function hasAcceptedTerms(userId: string): Promise<boolean> {
 
     return !!(data.terms_accepted_at && data.privacy_accepted_at);
   } catch (err) {
-    console.error('[LEGAL] Error checking terms acceptance:', err);
+    logger.error('Error checking terms acceptance', err);
     return false;
   }
 }
@@ -57,13 +58,13 @@ export async function getLegalAcceptanceLog(userId: string) {
       .order('accepted_at', { ascending: false });
 
     if (error) {
-      console.error('[LEGAL] Error fetching acceptance log:', error);
+      logger.error('Error fetching acceptance log', error);
       return [];
     }
 
     return data || [];
   } catch (err) {
-    console.error('[LEGAL] Exception fetching acceptance log:', err);
+    logger.error('Exception fetching acceptance log', err);
     return [];
   }
 }
@@ -126,7 +127,7 @@ export async function exportUserData(userId: string) {
       exportedAt: new Date().toISOString(),
     };
   } catch (err) {
-    console.error('[LEGAL] Error exporting user data:', err);
+    logger.error('Error exporting user data', err);
     throw err;
   }
 }

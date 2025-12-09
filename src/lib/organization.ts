@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { logger } from './logger';
 
 export interface Organization {
   id: string;
@@ -70,7 +71,7 @@ export async function getOrganization(organizationId: string): Promise<Organizat
     .maybeSingle();
 
   if (error) {
-    console.error('Error fetching organization:', error);
+    logger.error('Error fetching organization', error);
     return null;
   }
 
@@ -85,7 +86,7 @@ export async function getOrganizationBySlug(slug: string): Promise<Organization 
     .maybeSingle();
 
   if (error) {
-    console.error('Error fetching organization:', error);
+    logger.error('Error fetching organization by slug', error);
     return null;
   }
 
@@ -99,7 +100,7 @@ export async function createOrganization(params: {
   primary_color?: string;
   secondary_color?: string;
 }): Promise<Organization | null> {
-  console.log('[CREATE_ORG_LIB] Starting organization creation with params:', {
+  logger.debug('Starting organization creation', {
     name: params.name,
     slug: params.slug,
     owner_id: params.owner_id,
@@ -122,7 +123,7 @@ export async function createOrganization(params: {
     .single();
 
   if (error) {
-    console.error('[CREATE_ORG_LIB] Error creating organization:', {
+    logger.error('Error creating organization', error, {
       code: error.code,
       message: error.message,
       details: error.details,
@@ -131,7 +132,7 @@ export async function createOrganization(params: {
     return null;
   }
 
-  console.log('[CREATE_ORG_LIB] Organization created successfully:', data);
+  logger.info('Organization created successfully', { organizationId: data.id });
   return data;
 }
 
@@ -147,7 +148,7 @@ export async function updateOrganization(
     .single();
 
   if (error) {
-    console.error('Error updating organization:', error);
+    logger.error('Error updating organization', error);
     return null;
   }
 
@@ -162,7 +163,7 @@ export async function getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
     .order('price_monthly', { ascending: true });
 
   if (error) {
-    console.error('Error fetching subscription plans:', error);
+    logger.error('Error fetching subscription plans', error);
     return [];
   }
 
@@ -181,7 +182,7 @@ export async function getOrganizationSubscription(
     .maybeSingle();
 
   if (error) {
-    console.error('Error fetching subscription:', error);
+    logger.error('Error fetching subscription', error);
     return null;
   }
 
@@ -204,7 +205,7 @@ export async function validatePromoCode(code: string): Promise<PromoCode | null>
     .maybeSingle();
 
   if (error) {
-    console.error('Error validating promo code:', error);
+    logger.error('Error validating promo code', error);
     return null;
   }
 
@@ -239,7 +240,7 @@ export async function redeemPromoCode(
   });
 
   if (error) {
-    console.error('Error redeeming promo code:', error);
+    logger.error('Error redeeming promo code', error);
     return false;
   }
 

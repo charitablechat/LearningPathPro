@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { logger } from './logger';
 
 export type StorageBucket = 'course-videos' | 'course-images' | 'course-documents';
 
@@ -88,7 +89,7 @@ export async function uploadFile(
       originalFilename: file.name,
     };
   } catch (error) {
-    console.error('Upload error:', error);
+    logger.error('File upload error', error);
     throw new Error(`Failed to upload file: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
@@ -117,7 +118,7 @@ export async function deleteFile(url: string): Promise<void> {
       throw error;
     }
   } catch (error) {
-    console.error('Delete error:', error);
+    logger.error('File delete error', error);
     throw new Error(`Failed to delete file: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
