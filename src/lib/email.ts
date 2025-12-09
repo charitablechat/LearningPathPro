@@ -104,36 +104,40 @@ export function createEmailProvider(): EmailProvider {
 
 export const emailService = createEmailProvider();
 
+const APP_DOMAIN = import.meta.env.VITE_APP_DOMAIN || 'http://localhost:5173';
+const APP_NAME = 'Clear Course Studio';
+const SUPPORT_EMAIL = import.meta.env.VITE_EMAIL_FROM || 'support@clearcoursestudio.com';
+
 const emailFooter = `
   <div style="margin-top: 40px; padding-top: 30px; border-top: 1px solid #e2e8f0; text-align: center; color: #64748b; font-size: 12px;">
-    <p style="margin: 0 0 10px 0;"><strong>Clear Course Studio</strong></p>
+    <p style="margin: 0 0 10px 0;"><strong>${APP_NAME}</strong></p>
     <p style="margin: 0 0 10px 0;">Modern Learning Management Platform</p>
     <p style="margin: 0 0 10px 0;">
-      <a href="https://clearcoursestudio.com/terms" style="color: #3B82F6; text-decoration: none; margin: 0 8px;">Terms</a> |
-      <a href="https://clearcoursestudio.com/privacy" style="color: #3B82F6; text-decoration: none; margin: 0 8px;">Privacy</a> |
-      <a href="https://clearcoursestudio.com/contact" style="color: #3B82F6; text-decoration: none; margin: 0 8px;">Contact</a>
+      <a href="${APP_DOMAIN}/terms" style="color: #3B82F6; text-decoration: none; margin: 0 8px;">Terms</a> |
+      <a href="${APP_DOMAIN}/privacy" style="color: #3B82F6; text-decoration: none; margin: 0 8px;">Privacy</a> |
+      <a href="${APP_DOMAIN}/contact" style="color: #3B82F6; text-decoration: none; margin: 0 8px;">Contact</a>
     </p>
-    <p style="margin: 0 0 10px 0;">Email: support@clearcoursestudio.com</p>
-    <p style="margin: 0 0 10px 0;">You received this email because you have an account with Clear Course Studio.</p>
-    <p style="margin: 0;">© 2025 Clear Course Studio. All rights reserved.</p>
+    <p style="margin: 0 0 10px 0;">Email: ${SUPPORT_EMAIL}</p>
+    <p style="margin: 0 0 10px 0;">You received this email because you have an account with ${APP_NAME}.</p>
+    <p style="margin: 0;">© 2025 ${APP_NAME}. All rights reserved.</p>
   </div>
 `;
 
 const marketingFooter = `
   <div style="margin-top: 40px; padding-top: 30px; border-top: 1px solid #e2e8f0; text-align: center; color: #64748b; font-size: 12px;">
-    <p style="margin: 0 0 10px 0;"><strong>Clear Course Studio</strong></p>
+    <p style="margin: 0 0 10px 0;"><strong>${APP_NAME}</strong></p>
     <p style="margin: 0 0 10px 0;">Modern Learning Management Platform</p>
     <p style="margin: 0 0 10px 0;">
-      <a href="https://clearcoursestudio.com/terms" style="color: #3B82F6; text-decoration: none; margin: 0 8px;">Terms</a> |
-      <a href="https://clearcoursestudio.com/privacy" style="color: #3B82F6; text-decoration: none; margin: 0 8px;">Privacy</a> |
-      <a href="https://clearcoursestudio.com/contact" style="color: #3B82F6; text-decoration: none; margin: 0 8px;">Contact</a>
+      <a href="${APP_DOMAIN}/terms" style="color: #3B82F6; text-decoration: none; margin: 0 8px;">Terms</a> |
+      <a href="${APP_DOMAIN}/privacy" style="color: #3B82F6; text-decoration: none; margin: 0 8px;">Privacy</a> |
+      <a href="${APP_DOMAIN}/contact" style="color: #3B82F6; text-decoration: none; margin: 0 8px;">Contact</a>
     </p>
-    <p style="margin: 0 0 10px 0;">Email: support@clearcoursestudio.com</p>
+    <p style="margin: 0 0 10px 0;">Email: ${SUPPORT_EMAIL}</p>
     <p style="margin: 0 0 10px 0;">
-      You received this email because you opted in to receive updates from Clear Course Studio.
-      <a href="https://clearcoursestudio.com/profile/settings" style="color: #3B82F6; text-decoration: none;">Manage preferences</a>
+      You received this email because you opted in to receive updates from ${APP_NAME}.
+      <a href="${APP_DOMAIN}/profile/settings" style="color: #3B82F6; text-decoration: none;">Manage preferences</a>
     </p>
-    <p style="margin: 0;">© 2025 Clear Course Studio. All rights reserved.</p>
+    <p style="margin: 0;">© 2025 ${APP_NAME}. All rights reserved.</p>
   </div>
 `;
 
@@ -166,7 +170,7 @@ export const emailTemplates = {
             <li>Explore advanced features</li>
           </ul>
           <p>Your 14-day free trial has started. No credit card required!</p>
-          <a href="https://clearcoursestudio.com/dashboard" class="button">Go to Dashboard</a>
+          <a href="${APP_DOMAIN}/dashboard" class="button">Go to Dashboard</a>
           ${emailFooter}
         </div>
       </div>
@@ -224,7 +228,7 @@ export const emailTemplates = {
           <p>Hi there,</p>
           <p>Your free trial for <strong>${organizationName}</strong> expires in <strong>${daysLeft} days</strong>.</p>
           <p>To continue using Clear Course Studio without interruption, please select a subscription plan that fits your needs.</p>
-          <a href="https://clearcoursestudio.com/pricing" class="button">View Plans</a>
+          <a href="${APP_DOMAIN}/pricing" class="button">View Plans</a>
           ${marketingFooter}
         </div>
       </div>
@@ -253,7 +257,7 @@ export const emailTemplates = {
           <p>Great news!</p>
           <p>Your <strong>${planName}</strong> subscription for <strong>${organizationName}</strong> is now active.</p>
           <p>You now have full access to all the features included in your plan. Thank you for choosing Clear Course Studio!</p>
-          <a href="https://clearcoursestudio.com/dashboard" class="button">Go to Dashboard</a>
+          <a href="${APP_DOMAIN}/dashboard" class="button">Go to Dashboard</a>
           ${emailFooter}
         </div>
       </div>
@@ -281,7 +285,7 @@ export const emailTemplates = {
         <div class="content">
           <p>We were unable to process your payment for <strong>${organizationName}</strong>.</p>
           <p>Please update your payment method to avoid service interruption.</p>
-          <a href="https://clearcoursestudio.com/settings/subscription" class="button">Update Payment Method</a>
+          <a href="${APP_DOMAIN}/settings/subscription" class="button">Update Payment Method</a>
           ${emailFooter}
         </div>
       </div>

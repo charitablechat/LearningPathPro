@@ -1,10 +1,14 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.57.4';
 import Stripe from 'npm:stripe@14.10.0';
 
+// PRODUCTION SETUP: Add your production domain(s) here before deploying
+// Example: 'https://yourdomain.com', 'https://www.yourdomain.com'
 const ALLOWED_ORIGINS = [
-  'http://localhost:5173',
-  'http://localhost:4173',
-  'https://lmnpzfafwslxeqmdrucx.supabase.co',
+  'http://localhost:5173',  // Development
+  'http://localhost:4173',  // Preview
+  // ADD YOUR PRODUCTION DOMAIN HERE:
+  // 'https://yourdomain.com',
+  // 'https://www.yourdomain.com',
 ];
 
 const isDevelopment = Deno.env.get('DENO_DEPLOYMENT_ID') === undefined;
