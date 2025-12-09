@@ -20,7 +20,6 @@ class EnvironmentValidator {
     const required: (keyof EnvConfig)[] = [
       'VITE_SUPABASE_URL',
       'VITE_SUPABASE_ANON_KEY',
-      'VITE_STRIPE_PUBLISHABLE_KEY',
     ];
 
     const missing: string[] = [];
@@ -35,6 +34,20 @@ class EnvironmentValidator {
         `Missing required environment variables: ${missing.join(', ')}\n` +
         'Please check your .env file and ensure all required variables are set.'
       );
+    }
+
+    if (!import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY) {
+      if (this.isProduction) {
+        throw new Error(
+          'Missing required environment variable: VITE_STRIPE_PUBLISHABLE_KEY\n' +
+          'Stripe configuration is required in production. Please check your .env file.'
+        );
+      } else {
+        console.warn(
+          '⚠️  WARNING: VITE_STRIPE_PUBLISHABLE_KEY is not configured.\n' +
+          'Payment features will not work until you add a valid Stripe key.'
+        );
+      }
     }
   }
 
