@@ -1,21 +1,34 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { logger } from './logger';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  logger.error('Missing Supabase environment variables', undefined, {
-    VITE_SUPABASE_URL: supabaseUrl,
-    VITE_SUPABASE_ANON_KEY: supabaseAnonKey ? '***' : undefined,
-  });
-  throw new Error(
-    'Missing Supabase environment variables. ' +
-    'Please restart the dev server to load the updated .env file.'
-  );
+let supabaseInstance: SupabaseClient | null = null;
+
+if (supabaseUrl && supabaseAnonKey) {
+  try {
+    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey);
+    logger.info('Supabase client initialized successfully');
+  } catch (error) {
+    logger.error('Failed to initialize Supabase client', error);
+  }
+} else {
+  logger.warn('Supabase environment variables not configured. Client will not be initialized.');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = supabaseInstance as SupabaseClient;
+
+export function isSupabaseConfigured(): boolean {
+  return supabaseInstance !== null;
+}
+
+export function getSupabaseClient(): SupabaseClient {
+  if (!supabaseInstance) {
+    throw new Error('Supabase client is not configured. Please check your environment variables.');
+  }
+  return supabaseInstance;
+}
 
 export type UserRole = 'learner' | 'instructor' | 'admin';
 

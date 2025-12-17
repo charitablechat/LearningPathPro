@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User } from '@supabase/supabase-js';
-import { supabase, Profile } from '../lib/supabase';
+import { supabase, Profile, isSupabaseConfigured } from '../lib/supabase';
 import { logger } from '../lib/logger';
 
 interface AuthContextType {
@@ -24,6 +24,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!isSupabaseConfigured()) {
+      logger.warn('[AUTH] Supabase not configured, skipping auth initialization');
+      setLoading(false);
+      return;
+    }
+
     logger.debug('[AUTH] Initializing auth context');
     supabase.auth.getSession().then(({ data: { session } }) => {
       logger.debug('[AUTH] Session retrieved', { hasSession: !!session });
@@ -60,6 +66,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadProfile = async (userId: string, skipLoadingState = false, retryCount = 0, maxRetries = 5) => {
     logger.debug('[AUTH] loadProfile called', { userId, skipLoadingState, retryCount });
+
+    if (!isSupabaseConfigured()) {
+      logger.warn('[AUTH] Cannot load profile: Supabase not configured');
+      if (!skipLoadingState) {
+        setLoading(false);
+      }
+      return null;
+    }
 
     if (!skipLoadingState) {
       setLoading(true);
@@ -113,7 +127,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const checkSupabaseAvailable = () => {
+    if (!isSupabaseConfigured()) {
+      throw new Error('Service temporarily unavailable. Please contact support.');
+    }
+  };
+
   const signIn = async (email: string, password: string) => {
+    checkSupabaseAvailable();
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -128,6 +149,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {
+    checkSupabaseAvailable();
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -152,11 +174,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    checkSupabaseAvailable();
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   };
 
   const changePassword = async (currentPassword: string, newPassword: string) => {
+    checkSupabaseAvailable();
     if (!user?.email) {
       throw new Error('No authenticated user found');
     }
@@ -182,6 +206,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const resetPassword = async (email: string) => {
+    checkSupabaseAvailable();
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
     });
@@ -189,6 +214,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const updatePassword = async (newPassword: string) => {
+    checkSupabaseAvailable();
     if (newPassword.length < 6) {
       throw new Error('Password must be at least 6 characters long');
     }
