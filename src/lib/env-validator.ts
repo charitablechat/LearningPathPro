@@ -18,6 +18,41 @@ class EnvironmentValidator {
     this.isDevelopment = import.meta.env.DEV;
   }
 
+  private showConfigError(message: string): void {
+    if (typeof document !== 'undefined') {
+      const root = document.getElementById('root');
+      if (root) {
+        root.innerHTML = `
+          <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 1rem;">
+            <div style="max-width: 600px; background: white; border-radius: 1rem; padding: 2rem; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+              <div style="text-align: center; margin-bottom: 1.5rem;">
+                <svg style="width: 64px; height: 64px; margin: 0 auto; color: #ef4444;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <h1 style="font-size: 1.5rem; font-weight: bold; color: #1f2937; margin-bottom: 1rem; text-align: center;">Configuration Error</h1>
+              <p style="color: #6b7280; margin-bottom: 1.5rem; line-height: 1.6;">${message}</p>
+              <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem;">
+                <p style="color: #991b1b; font-size: 0.875rem; margin: 0;">
+                  <strong>For Deployment Platforms:</strong><br>
+                  Make sure to set the following environment variables in your deployment settings:
+                </p>
+                <ul style="color: #991b1b; font-size: 0.875rem; margin: 0.5rem 0 0 1.5rem;">
+                  <li>VITE_SUPABASE_URL</li>
+                  <li>VITE_SUPABASE_ANON_KEY</li>
+                  <li>VITE_STRIPE_PUBLISHABLE_KEY</li>
+                </ul>
+              </div>
+              <p style="color: #6b7280; font-size: 0.875rem; text-align: center; margin: 0;">
+                Contact your administrator if you need help configuring these variables.
+              </p>
+            </div>
+          </div>
+        `;
+      }
+    }
+  }
+
   validateRequired(): void {
     const required: (keyof EnvConfig)[] = [
       'VITE_SUPABASE_URL',
@@ -32,8 +67,11 @@ class EnvironmentValidator {
     });
 
     if (missing.length > 0) {
+      const errorMsg = `Missing required environment variables: ${missing.join(', ')}`;
+      logger.error(errorMsg);
+      this.showConfigError(errorMsg);
       throw new Error(
-        `Missing required environment variables: ${missing.join(', ')}\n` +
+        `${errorMsg}\n` +
         'Please check your .env file and ensure all required variables are set.'
       );
     }
@@ -134,8 +172,15 @@ class EnvironmentValidator {
 
 export const envValidator = new EnvironmentValidator();
 
+envValidator.validateAll();
+const envInfo = envValidator.getEnvironmentInfo();
+
 if (import.meta.env.DEV) {
-  envValidator.validateAll();
-  const envInfo = envValidator.getEnvironmentInfo();
   logger.info('Environment initialized', { mode: envInfo.mode });
+} else {
+  logger.info('Production environment initialized', {
+    mode: envInfo.mode,
+    hasSupabase: !!import.meta.env.VITE_SUPABASE_URL,
+    hasStripe: !!import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY,
+  });
 }
