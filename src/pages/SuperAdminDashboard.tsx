@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Shield, Building2, Users, CreditCard, TrendingUp, Search, UserCog, Tag, CheckCircle, XCircle } from 'lucide-react';
+import { Shield, Building2, Users, CreditCard, TrendingUp, Search, UserCog, Tag, CheckCircle, XCircle, UserPlus } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { Card } from '../components/Card';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
-import { supabase, Profile } from '../lib/supabase';
+import { supabase, Profile, UserRole } from '../lib/supabase';
 import { useToast } from '../hooks/useToast';
 
 type TabView = 'overview' | 'users' | 'organizations' | 'subscriptions' | 'promos' | 'superadmins';
@@ -439,26 +439,65 @@ function OrganizationsTab({ organizations, searchQuery, setSearchQuery, loading,
 }
 
 function UsersTab({ users, searchQuery, setSearchQuery, loading, onPromoteToSuperAdmin }: any) {
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showRoleChangeModal, setShowRoleChangeModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
+  const { success: showToast } = useToast();
+
   const filteredUsers = users.filter(
     (user: Profile) =>
       user.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handleRoleChange = async (newRole: UserRole) => {
+    if (!selectedUser) return;
+
+    try {
+      const { data, error } = await supabase.rpc('update_user_role', {
+        target_user_id: selectedUser.id,
+        new_role: newRole,
+      });
+
+      if (error) throw error;
+
+      if (data && typeof data === 'object' && 'success' in data) {
+        if (data.success) {
+          showToast('User role updated successfully');
+          setShowRoleChangeModal(false);
+          setSelectedUser(null);
+          window.location.reload();
+        } else {
+          showToast(data.error || 'Failed to update user role');
+        }
+      }
+    } catch (error: any) {
+      console.error('Error updating user role:', error);
+      showToast(error.message || 'Failed to update user role');
+    }
+  };
+
   return (
-    <Card className="p-6 bg-slate-800 border-slate-700">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-white">All Platform Users</h2>
-        <div className="relative">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-          <Input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search users..."
-            className="pl-10 w-64 bg-slate-700 border-slate-600 text-white"
-          />
+    <>
+      <Card className="p-6 bg-slate-800 border-slate-700">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-white">All Platform Users</h2>
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search users..."
+                className="pl-10 w-64 bg-slate-700 border-slate-600 text-white"
+              />
+            </div>
+            <Button onClick={() => setShowCreateModal(true)} className="bg-green-600 hover:bg-green-700">
+              <UserPlus className="w-4 h-4 mr-2" />
+              Create User
+            </Button>
+          </div>
         </div>
-      </div>
 
       {loading ? (
         <div className="text-center py-12">
@@ -491,9 +530,15 @@ function UsersTab({ users, searchQuery, setSearchQuery, loading, onPromoteToSupe
                     <div className="text-slate-300">{user.email}</div>
                   </td>
                   <td className="py-4 px-4">
-                    <span className="px-2 py-1 bg-blue-600/20 text-blue-400 rounded-full text-xs font-medium capitalize">
+                    <button
+                      onClick={() => {
+                        setSelectedUser(user);
+                        setShowRoleChangeModal(true);
+                      }}
+                      className="px-2 py-1 bg-blue-600/20 text-blue-400 rounded-full text-xs font-medium capitalize hover:bg-blue-600/30 transition-colors"
+                    >
                       {user.role}
-                    </span>
+                    </button>
                   </td>
                   <td className="py-4 px-4">
                     {user.is_super_admin ? (
@@ -519,7 +564,29 @@ function UsersTab({ users, searchQuery, setSearchQuery, loading, onPromoteToSupe
           </table>
         </div>
       )}
-    </Card>
+      </Card>
+
+      {showCreateModal && (
+        <CreateUserModal
+          onClose={() => setShowCreateModal(false)}
+          onSuccess={() => {
+            setShowCreateModal(false);
+            window.location.reload();
+          }}
+        />
+      )}
+
+      {showRoleChangeModal && selectedUser && (
+        <ChangeRoleModal
+          user={selectedUser}
+          onClose={() => {
+            setShowRoleChangeModal(false);
+            setSelectedUser(null);
+          }}
+          onConfirm={handleRoleChange}
+        />
+      )}
+    </>
   );
 }
 
@@ -712,5 +779,259 @@ function PromosTab() {
       <h2 className="text-xl font-semibold text-white mb-4">Promo Code Management</h2>
       <p className="text-slate-400">Promo code management features coming soon.</p>
     </Card>
+  );
+}
+
+function CreateUserModal({ onClose, onSuccess }: any) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [role, setRole] = useState<UserRole>('learner');
+  const [organizationId, setOrganizationId] = useState('');
+  const [organizations, setOrganizations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const { success: showToast } = useToast();
+
+  useEffect(() => {
+    fetchOrganizations();
+  }, []);
+
+  const fetchOrganizations = async () => {
+    const { data } = await supabase
+      .from('organizations')
+      .select('id, name')
+      .order('name');
+    if (data) {
+      setOrganizations(data);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No active session');
+      }
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            email,
+            password,
+            full_name: fullName,
+            role,
+            organization_id: organizationId || undefined,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to create user');
+      }
+
+      if (result.success) {
+        showToast('User created successfully');
+        onSuccess();
+      } else {
+        throw new Error(result.error || 'Failed to create user');
+      }
+    } catch (error: any) {
+      console.error('Error creating user:', error);
+      showToast(error.message || 'Failed to create user');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+      <div className="bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full border border-slate-700">
+        <div className="p-6 border-b border-slate-700">
+          <h2 className="text-2xl font-bold text-white">Create New User</h2>
+          <p className="text-slate-400 text-sm mt-1">Add a new user to the platform</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Full Name
+            </label>
+            <Input
+              type="text"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              placeholder="John Doe"
+              required
+              className="bg-slate-700 border-slate-600 text-white"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Email
+            </label>
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="user@example.com"
+              required
+              className="bg-slate-700 border-slate-600 text-white"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Password
+            </label>
+            <Input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Secure password"
+              required
+              minLength={6}
+              className="bg-slate-700 border-slate-600 text-white"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Role
+            </label>
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value as UserRole)}
+              className="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            >
+              <option value="learner">Learner</option>
+              <option value="instructor">Instructor</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Organization (Optional)
+            </label>
+            <select
+              value={organizationId}
+              onChange={(e) => setOrganizationId(e.target.value)}
+              className="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">No Organization</option>
+              {organizations.map((org) => (
+                <option key={org.id} value={org.id}>
+                  {org.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={onClose}
+              disabled={loading}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={loading}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {loading ? 'Creating...' : 'Create User'}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function ChangeRoleModal({ user, onClose, onConfirm }: any) {
+  const [selectedRole, setSelectedRole] = useState<UserRole>(user.role);
+
+  const getRoleBadgeColor = (role: UserRole) => {
+    const colors = {
+      learner: 'bg-blue-600/20 text-blue-400 border-blue-500/50',
+      instructor: 'bg-green-600/20 text-green-400 border-green-500/50',
+      admin: 'bg-orange-600/20 text-orange-400 border-orange-500/50',
+    };
+    return colors[role];
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+      <div className="bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full border border-slate-700">
+        <div className="p-6 border-b border-slate-700">
+          <h2 className="text-2xl font-bold text-white">Change User Role</h2>
+          <p className="text-slate-400 text-sm mt-1">
+            Update role for {user.full_name || user.email}
+          </p>
+        </div>
+
+        <div className="p-6">
+          <div className="space-y-3">
+            {(['learner', 'instructor', 'admin'] as UserRole[]).map((role) => (
+              <button
+                key={role}
+                onClick={() => setSelectedRole(role)}
+                className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
+                  selectedRole === role
+                    ? 'border-blue-500 bg-blue-500/10'
+                    : 'border-slate-700 hover:border-slate-600 bg-slate-700/30'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-white font-medium capitalize">{role}</div>
+                    <div className="text-slate-400 text-sm">
+                      {role === 'learner' && 'Can enroll in and take courses'}
+                      {role === 'instructor' && 'Can create and manage courses'}
+                      {role === 'admin' && 'Can manage organization settings'}
+                    </div>
+                  </div>
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-medium border ${getRoleBadgeColor(
+                      role
+                    )}`}
+                  >
+                    {role}
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          <div className="flex justify-end gap-3 pt-6 border-t border-slate-700 mt-6">
+            <Button variant="secondary" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => onConfirm(selectedRole)}
+              disabled={selectedRole === user.role}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              Update Role
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
