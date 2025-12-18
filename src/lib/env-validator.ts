@@ -82,11 +82,7 @@ class EnvironmentValidator {
     }
 
     if (!import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY) {
-      if (this.isProduction) {
-        errors.push('Missing required environment variable: VITE_STRIPE_PUBLISHABLE_KEY (required in production)');
-      } else {
-        warnings.push('VITE_STRIPE_PUBLISHABLE_KEY is not configured. Payment features will not work.');
-      }
+      warnings.push('VITE_STRIPE_PUBLISHABLE_KEY is not configured. Payment features will not work.');
     }
 
     return { errors, warnings };
