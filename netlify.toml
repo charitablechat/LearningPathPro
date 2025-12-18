@@ -1,6 +1,6 @@
 [build]
 publish = "dist"
-command = "npx vite build"
+command = "node verify-env.js && npx vite build"
 
 [[redirects]]
 from = "/*"
