@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Check, X } from 'lucide-react';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import { BackButton } from '../components/BackButton';
 import { getSubscriptionPlans, SubscriptionPlan } from '../lib/organization';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -54,6 +55,9 @@ export function PricingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <div className="max-w-7xl mx-auto px-4 py-16">
+        <div className="mb-8">
+          <BackButton to="/" className="text-slate-300 hover:text-white" />
+        </div>
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold text-white mb-4">
             Simple, Transparent Pricing

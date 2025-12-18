@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import { BackButton } from '../components/BackButton';
 import { navigateTo } from '../lib/router';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
@@ -168,6 +169,9 @@ export function FAQPage() {
       </nav>
 
       <div className="max-w-4xl mx-auto px-4 py-16">
+        <div className="mb-8">
+          <BackButton to="/" className="text-slate-300 hover:text-white" />
+        </div>
         <div className="text-center mb-16">
           <h1 className="text-5xl font-bold text-white mb-4">
             Frequently Asked Questions

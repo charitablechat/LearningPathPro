@@ -6,6 +6,7 @@ import { navigateTo } from '../lib/router';
 import { Card } from '../components/Card';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
+import { BackButton } from '../components/BackButton';
 import { useToast } from '../hooks/useToast';
 import { Building2, ArrowRight, Tag, Check } from 'lucide-react';
 import { logger } from '../lib/logger';
@@ -204,6 +205,9 @@ export function OrganizationSignupPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
+        <div className="mb-8">
+          <BackButton to="/pricing" className="text-slate-300 hover:text-white" />
+        </div>
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-600/20 mb-4">
             <Building2 className="w-8 h-8 text-blue-400" />

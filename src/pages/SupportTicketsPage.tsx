@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import { BackButton } from '../components/BackButton';
 import { navigateTo } from '../lib/router';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -275,6 +276,9 @@ export function SupportTicketsPage() {
       </nav>
 
       <div className="max-w-6xl mx-auto px-4 py-16">
+        <div className="mb-8">
+          <BackButton to="/dashboard" variant="button" className="mb-4" />
+        </div>
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-white mb-4">
             My Support Tickets

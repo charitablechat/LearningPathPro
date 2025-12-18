@@ -2,6 +2,7 @@ import { useState, FormEvent } from 'react';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { Card } from '../components/Card';
+import { BackButton } from '../components/BackButton';
 import { navigateTo } from '../lib/router';
 import { useAuth } from '../contexts/AuthContext';
 import { useOrganization } from '../contexts/OrganizationContext';
@@ -85,6 +86,9 @@ export function ContactPage() {
       </nav>
 
       <div className="max-w-6xl mx-auto px-4 py-16">
+        <div className="mb-8">
+          <BackButton to="/" className="text-slate-300 hover:text-white" />
+        </div>
         <div className="text-center mb-16">
           <h1 className="text-5xl font-bold text-white mb-4">
             Get in Touch

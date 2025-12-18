@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { Input } from '../components/Input';
+import { BackButton } from '../components/BackButton';
 import { navigateTo } from '../lib/router';
 import { Search, BookOpen, Video, Users, Settings, CreditCard, FileText, ChevronRight, HelpCircle } from 'lucide-react';
 
@@ -444,6 +445,9 @@ Create custom reports for analysis:
       </nav>
 
       <div className="max-w-7xl mx-auto px-4 py-16">
+        <div className="mb-8">
+          <BackButton className="text-slate-300 hover:text-white" />
+        </div>
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold text-white mb-4">
             Help Center

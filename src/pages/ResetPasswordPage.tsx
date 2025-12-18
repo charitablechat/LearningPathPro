@@ -2,6 +2,7 @@ import { useState, FormEvent, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
+import { BackButton } from '../components/BackButton';
 import { navigateTo } from '../lib/router';
 
 export function ResetPasswordPage() {
@@ -54,6 +55,9 @@ export function ResetPasswordPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-50 to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4 transition-colors">
       <div className="w-full max-w-md">
+        <div className="mb-8">
+          <BackButton to="/login" />
+        </div>
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center mb-4">
             <img src="/CLEAR COURSE STUDIO.png" alt="Clear Course Studio" className="h-24" />
