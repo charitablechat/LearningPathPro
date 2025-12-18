@@ -4,6 +4,7 @@ import { supabase, Profile, UserRole } from '../lib/supabase';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
+import { useToast } from '../hooks/useToast';
 
 interface Stats {
   totalUsers: number;
@@ -20,6 +21,7 @@ interface AdminDashboardProps {
 }
 
 export function AdminDashboard({ onViewCourse }: AdminDashboardProps) {
+  const { showToast } = useToast();
   const [stats, setStats] = useState<Stats>({
     totalUsers: 0,
     totalCourses: 0,
@@ -66,11 +68,25 @@ export function AdminDashboard({ onViewCourse }: AdminDashboardProps) {
 
   const updateUserRole = async (userId: string, newRole: UserRole) => {
     try {
-      await supabase.from('profiles').update({ role: newRole }).eq('id', userId);
-      await loadData();
-      setEditingUser(null);
-    } catch (error) {
+      const { data, error } = await supabase.rpc('update_organization_user_role', {
+        target_user_id: userId,
+        new_role: newRole,
+      });
+
+      if (error) throw error;
+
+      if (data && typeof data === 'object' && 'success' in data) {
+        if (data.success) {
+          showToast('User role updated successfully');
+          await loadData();
+          setEditingUser(null);
+        } else {
+          showToast(data.error || 'Failed to update user role');
+        }
+      }
+    } catch (error: any) {
       console.error('Error updating user role:', error);
+      showToast(error.message || 'Failed to update user role');
     }
   };
 
