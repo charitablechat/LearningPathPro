@@ -12,7 +12,6 @@ Your application has been prepared for production deployment. The codebase is pr
 
 - [x] **Deployment Configuration Files**
   - Created `vercel.json` with security headers
-  - Created `netlify.toml` with security headers and caching
 
 - [x] **Environment Variables**
   - Updated `.env.template` with all required variables
@@ -155,21 +154,12 @@ This creates three buckets:
 
 ### 7. Deploy to Hosting Platform
 
-**Choose One**:
-
-#### Option A: Vercel (Recommended)
+#### Vercel (Recommended)
 ```bash
 npm i -g vercel
 vercel --prod
 ```
 Then set environment variables in Vercel Dashboard.
-
-#### Option B: Netlify
-```bash
-npm i -g netlify-cli
-netlify deploy --prod
-```
-Then set environment variables in Netlify Dashboard.
 
 ---
 

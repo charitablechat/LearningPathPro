@@ -23,7 +23,7 @@ console.log('VITE_STRIPE_PUBLISHABLE_KEY:', process.env.VITE_STRIPE_PUBLISHABLE_
 
 if (!process.env.VITE_SUPABASE_URL || !process.env.VITE_SUPABASE_ANON_KEY || !process.env.VITE_STRIPE_PUBLISHABLE_KEY) {
   console.error('\n⚠️  Missing required environment variables!');
-  console.error('Make sure these are set in your Netlify dashboard or .env file\n');
+  console.error('Make sure these are set in your deployment platform or .env file\n');
   process.exit(1);
 }
 

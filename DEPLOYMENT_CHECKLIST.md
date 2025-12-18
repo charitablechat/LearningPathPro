@@ -75,7 +75,7 @@
 ### 7. Domain and SSL
 - [ ] Register production domain (if not already)
 - [ ] Configure DNS records (A/CNAME)
-- [ ] Set up SSL certificate (automatic with Vercel/Netlify)
+- [ ] Set up SSL certificate (automatic with Vercel)
 - [ ] Verify SSL certificate is valid
 - [ ] Test HTTPS redirect works
 - [ ] Update ALLOWED_ORIGINS with production domain
@@ -94,7 +94,7 @@
 ### 9. Deploy Application
 Choose your deployment platform:
 
-#### Vercel
+#### Vercel (Recommended)
 ```bash
 # Install Vercel CLI
 npm i -g vercel
@@ -103,18 +103,6 @@ npm i -g vercel
 vercel --prod
 
 # Set environment variables in Vercel dashboard
-# Site Settings → Environment Variables
-```
-
-#### Netlify
-```bash
-# Install Netlify CLI
-npm i -g netlify-cli
-
-# Deploy
-netlify deploy --prod
-
-# Set environment variables in Netlify dashboard
 # Site Settings → Environment Variables
 ```
 
@@ -189,9 +177,6 @@ If issues are discovered post-deployment:
    ```bash
    # Vercel
    vercel rollback [deployment-url]
-
-   # Netlify
-   netlify rollback
 
    # Manual
    # Restore previous build from backup

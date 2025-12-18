@@ -1,6 +1,6 @@
 # Deployment Environment Variables Setup
 
-Your application requires the following environment variables to be configured in your deployment platform (Netlify, Vercel, etc.).
+Your application requires the following environment variables to be configured in your deployment platform.
 
 ## Required Environment Variables
 
@@ -37,13 +37,6 @@ VITE_APP_DOMAIN=https://clearcoursestudio.com
 ```
 
 ## Platform-Specific Instructions
-
-### Netlify
-
-1. Go to your site dashboard
-2. Navigate to **Site settings** > **Environment variables**
-3. Click **Add a variable** and add each variable listed above
-4. After adding all variables, trigger a new deployment
 
 ### Vercel
 

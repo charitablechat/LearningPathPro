@@ -29,9 +29,6 @@ vercel env add VITE_SUPABASE_ANON_KEY production
 vercel env add VITE_STRIPE_PUBLISHABLE_KEY production
 ```
 
-**Netlify:**
-Navigate to: Site settings → Environment variables → Add variables
-
 **Supabase Edge Functions:**
 All Supabase environment variables are automatically available:
 - SUPABASE_URL
