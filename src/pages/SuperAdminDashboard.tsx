@@ -444,6 +444,7 @@ function UsersTab({ users, searchQuery, setSearchQuery, loading, onPromoteToSupe
   const [showRoleChangeModal, setShowRoleChangeModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
   const { success: showToast } = useToast();
+  const { profile } = useAuth();
 
   const filteredUsers = users.filter(
     (user: Profile) =>
@@ -531,7 +532,7 @@ function UsersTab({ users, searchQuery, setSearchQuery, loading, onPromoteToSupe
                     <div className="text-slate-300">{user.email}</div>
                   </td>
                   <td className="py-4 px-4">
-                    {user.id === currentUserId ? (
+                    {user.id === currentUserId && profile?.email !== 'kale@charitablechat.com' ? (
                       <span
                         className="px-2 py-1 bg-slate-600/20 text-slate-400 rounded-full text-xs font-medium capitalize cursor-not-allowed"
                         title="You cannot change your own role"
