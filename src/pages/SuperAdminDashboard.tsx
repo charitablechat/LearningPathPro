@@ -533,6 +533,8 @@ function OrganizationsTab({ organizations, searchQuery, setSearchQuery, loading,
 
 function UsersTab({ users, searchQuery, setSearchQuery, loading, onPromoteToSuperAdmin, currentUserId }: any) {
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showRoleChangeModal, setShowRoleChangeModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
   const { success: showToast } = useToast();
@@ -569,6 +571,20 @@ function UsersTab({ users, searchQuery, setSearchQuery, loading, onPromoteToSupe
       console.error('Error updating user role:', error);
       showToast(error.message || 'Failed to update user role');
     }
+  };
+
+  const handleEdit = (user: Profile) => {
+    setSelectedUser(user);
+    setShowEditModal(true);
+  };
+
+  const handleDelete = (user: Profile) => {
+    setSelectedUser(user);
+    setShowDeleteModal(true);
+  };
+
+  const handleRefresh = () => {
+    window.location.reload();
   };
 
   return (
@@ -611,7 +627,7 @@ function UsersTab({ users, searchQuery, setSearchQuery, loading, onPromoteToSupe
                 <th className="text-left py-3 px-4 text-slate-300 font-semibold">Email</th>
                 <th className="text-left py-3 px-4 text-slate-300 font-semibold">Role</th>
                 <th className="text-left py-3 px-4 text-slate-300 font-semibold">Super Admin</th>
-                <th className="text-left py-3 px-4 text-slate-300 font-semibold">Actions</th>
+                <th className="text-right py-3 px-4 text-slate-300 font-semibold">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -651,15 +667,24 @@ function UsersTab({ users, searchQuery, setSearchQuery, loading, onPromoteToSupe
                     )}
                   </td>
                   <td className="py-4 px-4">
-                    {!user.is_super_admin && (
+                    <div className="flex justify-end gap-2">
                       <Button
                         size="sm"
-                        onClick={() => onPromoteToSuperAdmin(user.id)}
-                        className="bg-orange-600 hover:bg-orange-700"
+                        variant="outline"
+                        onClick={() => handleEdit(user)}
+                        className="text-blue-400 border-blue-500/50 hover:bg-blue-900/20"
                       >
-                        Promote to Super Admin
+                        <Edit2 className="w-4 h-4" />
                       </Button>
-                    )}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDelete(user)}
+                        className="text-red-400 border-red-500/50 hover:bg-red-900/20"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -675,6 +700,36 @@ function UsersTab({ users, searchQuery, setSearchQuery, loading, onPromoteToSupe
           onSuccess={() => {
             setShowCreateModal(false);
             window.location.reload();
+          }}
+        />
+      )}
+
+      {showEditModal && selectedUser && (
+        <EditUserModal
+          user={selectedUser}
+          onClose={() => {
+            setShowEditModal(false);
+            setSelectedUser(null);
+          }}
+          onSuccess={() => {
+            setShowEditModal(false);
+            setSelectedUser(null);
+            handleRefresh();
+          }}
+        />
+      )}
+
+      {showDeleteModal && selectedUser && (
+        <DeleteUserModal
+          user={selectedUser}
+          onClose={() => {
+            setShowDeleteModal(false);
+            setSelectedUser(null);
+          }}
+          onSuccess={() => {
+            setShowDeleteModal(false);
+            setSelectedUser(null);
+            handleRefresh();
           }}
         />
       )}
@@ -1901,6 +1956,346 @@ function DeleteOrganizationModal({ organization, onClose, onSuccess }: any) {
               className="bg-red-600 hover:bg-red-700"
             >
               {loading ? 'Deleting...' : 'Delete Organization'}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EditUserModal({ user, onClose, onSuccess }: any) {
+  const [email, setEmail] = useState(user.email);
+  const [fullName, setFullName] = useState(user.full_name || '');
+  const [role, setRole] = useState<UserRole>(user.role);
+  const [organizationId, setOrganizationId] = useState(user.organization_id || '');
+  const [isSuperAdmin, setIsSuperAdmin] = useState(user.is_super_admin || false);
+  const [password, setPassword] = useState('');
+  const [updatePassword, setUpdatePassword] = useState(false);
+  const [organizations, setOrganizations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const { success: showToast, error: showError } = useToast();
+  const { profile } = useAuth();
+
+  useEffect(() => {
+    fetchOrganizations();
+  }, []);
+
+  const fetchOrganizations = async () => {
+    const { data } = await supabase
+      .from('organizations')
+      .select('id, name')
+      .order('name');
+    if (data) {
+      setOrganizations(data);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No active session');
+      }
+
+      const updates: any = {
+        userId: user.id,
+        email,
+        full_name: fullName,
+        role,
+        organization_id: organizationId || null,
+        is_super_admin: isSuperAdmin,
+      };
+
+      if (updatePassword && password) {
+        updates.password = password;
+      }
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/update-user`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify(updates),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to update user');
+      }
+
+      if (result.success) {
+        showToast('User updated successfully');
+        onSuccess();
+      } else {
+        throw new Error(result.error || 'Failed to update user');
+      }
+    } catch (error: any) {
+      console.error('Error updating user:', error);
+      showError(error.message || 'Failed to update user');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const canEditSuperAdmin = user.id !== profile?.id;
+
+  return (
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+      <div className="bg-slate-800 rounded-2xl shadow-2xl max-w-2xl w-full border border-slate-700 max-h-[90vh] overflow-y-auto">
+        <div className="p-6 border-b border-slate-700">
+          <h2 className="text-2xl font-bold text-white">Edit User</h2>
+          <p className="text-slate-400 text-sm mt-1">Update user information and settings</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Full Name
+            </label>
+            <Input
+              type="text"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              placeholder="John Doe"
+              required
+              className="bg-slate-700 border-slate-600 text-white"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Email
+            </label>
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="user@example.com"
+              required
+              className="bg-slate-700 border-slate-600 text-white"
+            />
+          </div>
+
+          <div>
+            <label className="flex items-center space-x-2 text-sm font-medium text-slate-300 mb-2">
+              <input
+                type="checkbox"
+                checked={updatePassword}
+                onChange={(e) => setUpdatePassword(e.target.checked)}
+                className="rounded border-slate-600 bg-slate-700 text-blue-600 focus:ring-blue-500"
+              />
+              <span>Update Password</span>
+            </label>
+            {updatePassword && (
+              <Input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="New password"
+                minLength={6}
+                className="bg-slate-700 border-slate-600 text-white"
+              />
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Role
+            </label>
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value as UserRole)}
+              className="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            >
+              <option value="learner">Learner</option>
+              <option value="instructor">Instructor</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Organization
+            </label>
+            <select
+              value={organizationId}
+              onChange={(e) => setOrganizationId(e.target.value)}
+              className="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">No Organization</option>
+              {organizations.map((org) => (
+                <option key={org.id} value={org.id}>
+                  {org.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={isSuperAdmin}
+                onChange={(e) => setIsSuperAdmin(e.target.checked)}
+                disabled={!canEditSuperAdmin}
+                className="rounded border-slate-600 bg-slate-700 text-orange-600 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+              <span className="text-sm font-medium text-slate-300">
+                Super Admin
+              </span>
+            </label>
+            {!canEditSuperAdmin && (
+              <p className="text-slate-400 text-xs mt-1">
+                You cannot change your own super admin status
+              </p>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-700">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={onClose}
+              disabled={loading}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={loading}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {loading ? 'Updating...' : 'Update User'}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function DeleteUserModal({ user, onClose, onSuccess }: any) {
+  const [confirmText, setConfirmText] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { success: showToast, error: showError } = useToast();
+  const { profile } = useAuth();
+
+  const canDelete = user.id !== profile?.id;
+
+  const handleDelete = async () => {
+    if (confirmText !== user.email) {
+      showError('Email address does not match');
+      return;
+    }
+
+    if (!canDelete) {
+      showError('You cannot delete your own account');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No active session');
+      }
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-user`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ userId: user.id }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to delete user');
+      }
+
+      if (result.success) {
+        showToast('User deleted successfully');
+        onSuccess();
+      } else {
+        throw new Error(result.error || 'Failed to delete user');
+      }
+    } catch (error: any) {
+      console.error('Error deleting user:', error);
+      showError(error.message || 'Failed to delete user');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+      <div className="bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full border border-slate-700">
+        <div className="p-6 border-b border-slate-700">
+          <h2 className="text-2xl font-bold text-white">Delete User</h2>
+          <p className="text-slate-400 text-sm mt-1">
+            This action cannot be undone
+          </p>
+        </div>
+
+        <div className="p-6">
+          <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg mb-4">
+            <div className="flex gap-3">
+              <Shield className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-red-200">
+                <p className="font-medium mb-1">Warning:</p>
+                <ul className="space-y-1 text-red-200/80">
+                  <li>• User will be permanently deleted from the system</li>
+                  <li>• All user data and progress will be lost</li>
+                  <li>• User enrollments will be removed</li>
+                  <li>• This action is permanent and cannot be undone</li>
+                  {!canDelete && <li className="text-red-300 font-bold">• You cannot delete your own account</li>}
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Type the user's email to confirm: <span className="text-white font-bold">{user.email}</span>
+              </label>
+              <Input
+                type="text"
+                value={confirmText}
+                onChange={(e) => setConfirmText(e.target.value)}
+                placeholder={user.email}
+                className="bg-slate-700 border-slate-600 text-white"
+                disabled={!canDelete}
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-6 border-t border-slate-700 mt-6">
+            <Button variant="secondary" onClick={onClose} disabled={loading}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleDelete}
+              disabled={confirmText !== user.email || loading || !canDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {loading ? 'Deleting...' : 'Delete User'}
             </Button>
           </div>
         </div>
