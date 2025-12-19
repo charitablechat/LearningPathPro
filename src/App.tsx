@@ -4,6 +4,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { OrganizationProvider } from './contexts/OrganizationContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Navbar } from './components/Navbar';
+import { ImpersonationBanner } from './components/ImpersonationBanner';
 import { LoginPage } from './pages/LoginPage';
 import { LearnerDashboard } from './pages/LearnerDashboard';
 import { InstructorDashboard } from './pages/InstructorDashboard';
@@ -214,6 +215,7 @@ function AppContent() {
   if (profile.is_super_admin && currentPath === '/super-admin') {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+        <ImpersonationBanner />
         <Navbar onProfileClick={() => navigateTo('/profile')} />
         <SuperAdminDashboard />
       </div>
@@ -223,6 +225,7 @@ function AppContent() {
   if (currentPath === '/settings') {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+        <ImpersonationBanner />
         <Navbar onProfileClick={() => navigateTo('/profile')} />
         <OrganizationSettingsPage />
       </div>
@@ -232,6 +235,7 @@ function AppContent() {
   if (viewingCourse) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+        <ImpersonationBanner />
         <Navbar onProfileClick={() => navigateTo('/profile')} />
         <CourseViewerPage
           courseId={viewingCourse.id}
@@ -245,6 +249,7 @@ function AppContent() {
   if (currentPath === '/profile') {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+        <ImpersonationBanner />
         <Navbar onProfileClick={() => navigateTo('/dashboard')} />
         <ProfilePage onBack={() => navigateTo('/dashboard')} />
         <HelpWidget />
@@ -262,6 +267,7 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+      <ImpersonationBanner />
       <Navbar onProfileClick={() => navigateTo('/profile')} />
       {profile.role === 'learner' && <LearnerDashboard />}
       {profile.role === 'instructor' && <InstructorDashboard onViewCourse={setViewingCourse} />}

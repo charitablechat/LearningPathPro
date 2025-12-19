@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Shield, Building2, Users, CreditCard, TrendingUp, Search, UserCog, Tag, CheckCircle, XCircle, UserPlus } from 'lucide-react';
+import { Shield, Building2, Users, CreditCard, TrendingUp, Search, UserCog, Tag, CheckCircle, XCircle, UserPlus, TestTube2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { Card } from '../components/Card';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
 import { supabase, Profile, UserRole } from '../lib/supabase';
 import { useToast } from '../hooks/useToast';
+import { navigateTo } from '../lib/router';
 
-type TabView = 'overview' | 'users' | 'organizations' | 'subscriptions' | 'promos' | 'superadmins';
+type TabView = 'overview' | 'users' | 'organizations' | 'subscriptions' | 'promos' | 'superadmins' | 'role-testing';
 
 export function SuperAdminDashboard() {
   const { profile } = useAuth();
@@ -188,6 +189,13 @@ export function SuperAdminDashboard() {
           >
             Promo Codes
           </TabButton>
+          <TabButton
+            active={currentTab === 'role-testing'}
+            onClick={() => setCurrentTab('role-testing')}
+            icon={<TestTube2 className="w-4 h-4" />}
+          >
+            Role Testing
+          </TabButton>
         </div>
 
         {currentTab === 'overview' && (
@@ -223,6 +231,7 @@ export function SuperAdminDashboard() {
         )}
         {currentTab === 'subscriptions' && <SubscriptionsTab />}
         {currentTab === 'promos' && <PromosTab />}
+        {currentTab === 'role-testing' && <RoleTestingTab users={allUsers} />}
       </div>
     </div>
   );
@@ -1039,6 +1048,297 @@ function ChangeRoleModal({ user, onClose, onConfirm }: any) {
               className="bg-blue-600 hover:bg-blue-700"
             >
               Update Role
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RoleTestingTab({ users }: { users: Profile[] }) {
+  const { startImpersonation } = useAuth();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedRole, setSelectedRole] = useState<'all' | UserRole>('all');
+  const [showImpersonateModal, setShowImpersonateModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
+  const { success: showToast, error: showError } = useToast();
+
+  const nonSuperAdminUsers = users.filter((u) => !u.is_super_admin && u.organization_id);
+
+  const filteredUsers = nonSuperAdminUsers.filter((user) => {
+    const matchesSearch =
+      user.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesRole = selectedRole === 'all' || user.role === selectedRole;
+    return matchesSearch && matchesRole;
+  });
+
+  const usersByRole = {
+    learner: filteredUsers.filter((u) => u.role === 'learner'),
+    instructor: filteredUsers.filter((u) => u.role === 'instructor'),
+    admin: filteredUsers.filter((u) => u.role === 'admin'),
+  };
+
+  const handleStartImpersonation = async (user: Profile, reason: string) => {
+    try {
+      await startImpersonation(user.id, reason);
+      showToast(`Now impersonating ${user.full_name || user.email}`);
+      setTimeout(() => {
+        navigateTo('/dashboard');
+      }, 500);
+    } catch (error: any) {
+      console.error('Error starting impersonation:', error);
+      showError(error.message || 'Failed to start impersonation');
+    }
+  };
+
+  const getRoleBadgeColor = (role: UserRole) => {
+    const colors = {
+      learner: 'bg-blue-600/20 text-blue-400 border-blue-500/50',
+      instructor: 'bg-green-600/20 text-green-400 border-green-500/50',
+      admin: 'bg-orange-600/20 text-orange-400 border-orange-500/50',
+    };
+    return colors[role];
+  };
+
+  return (
+    <>
+      <div className="space-y-6">
+        <Card className="p-6 bg-slate-800 border-slate-700">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-white mb-2">Role Testing & Impersonation</h2>
+            <p className="text-slate-400">
+              Select a user to impersonate and test their role-specific dashboard and features
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4 mb-6">
+            <div className="flex-1 relative">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search users..."
+                className="pl-10 bg-slate-700 border-slate-600 text-white"
+              />
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setSelectedRole('all')}
+                className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                  selectedRole === 'all'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                }`}
+              >
+                All Roles
+              </button>
+              <button
+                onClick={() => setSelectedRole('learner')}
+                className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                  selectedRole === 'learner'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                }`}
+              >
+                Learners
+              </button>
+              <button
+                onClick={() => setSelectedRole('instructor')}
+                className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                  selectedRole === 'instructor'
+                    ? 'bg-green-600 text-white'
+                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                }`}
+              >
+                Instructors
+              </button>
+              <button
+                onClick={() => setSelectedRole('admin')}
+                className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                  selectedRole === 'admin'
+                    ? 'bg-orange-600 text-white'
+                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                }`}
+              >
+                Admins
+              </button>
+            </div>
+          </div>
+
+          {selectedRole === 'all' ? (
+            <div className="space-y-6">
+              {(['learner', 'instructor', 'admin'] as UserRole[]).map((role) => (
+                <div key={role}>
+                  <h3 className="text-lg font-semibold text-white mb-3 capitalize flex items-center gap-2">
+                    <span
+                      className={`inline-flex px-3 py-1 rounded-full text-xs font-medium border ${getRoleBadgeColor(
+                        role
+                      )}`}
+                    >
+                      {role}s
+                    </span>
+                    <span className="text-slate-400 text-sm">({usersByRole[role].length})</span>
+                  </h3>
+                  {usersByRole[role].length === 0 ? (
+                    <div className="text-center py-8 bg-slate-700/30 rounded-lg">
+                      <p className="text-slate-400">No {role}s found</p>
+                    </div>
+                  ) : (
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {usersByRole[role].map((user) => (
+                        <UserCard
+                          key={user.id}
+                          user={user}
+                          onImpersonate={() => {
+                            setSelectedUser(user);
+                            setShowImpersonateModal(true);
+                          }}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div>
+              {filteredUsers.length === 0 ? (
+                <div className="text-center py-12 bg-slate-700/30 rounded-lg">
+                  <Users className="w-16 h-16 text-slate-600 mx-auto mb-4" />
+                  <p className="text-slate-400">No users found</p>
+                </div>
+              ) : (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredUsers.map((user) => (
+                    <UserCard
+                      key={user.id}
+                      user={user}
+                      onImpersonate={() => {
+                        setSelectedUser(user);
+                        setShowImpersonateModal(true);
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </Card>
+      </div>
+
+      {showImpersonateModal && selectedUser && (
+        <ImpersonateModal
+          user={selectedUser}
+          onClose={() => {
+            setShowImpersonateModal(false);
+            setSelectedUser(null);
+          }}
+          onConfirm={handleStartImpersonation}
+        />
+      )}
+    </>
+  );
+}
+
+function UserCard({ user, onImpersonate }: { user: Profile; onImpersonate: () => void }) {
+  const getRoleBadgeColor = (role: UserRole) => {
+    const colors = {
+      learner: 'bg-blue-600/20 text-blue-400 border-blue-500/50',
+      instructor: 'bg-green-600/20 text-green-400 border-green-500/50',
+      admin: 'bg-orange-600/20 text-orange-400 border-orange-500/50',
+    };
+    return colors[role];
+  };
+
+  return (
+    <div className="p-4 bg-slate-700/50 rounded-lg border border-slate-600 hover:border-slate-500 transition-all">
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex-1 min-w-0">
+          <div className="text-white font-medium truncate">{user.full_name || 'N/A'}</div>
+          <div className="text-slate-400 text-sm truncate">{user.email}</div>
+        </div>
+        <span
+          className={`inline-flex px-2 py-1 rounded-full text-xs font-medium border ${getRoleBadgeColor(
+            user.role
+          )} capitalize ml-2 flex-shrink-0`}
+        >
+          {user.role}
+        </span>
+      </div>
+      <Button onClick={onImpersonate} size="sm" className="w-full bg-amber-600 hover:bg-amber-700">
+        <TestTube2 className="w-4 h-4 mr-2" />
+        Test as {user.role}
+      </Button>
+    </div>
+  );
+}
+
+function ImpersonateModal({
+  user,
+  onClose,
+  onConfirm,
+}: {
+  user: Profile;
+  onClose: () => void;
+  onConfirm: (user: Profile, reason: string) => void;
+}) {
+  const [reason, setReason] = useState('');
+
+  const handleConfirm = () => {
+    onConfirm(user, reason);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+      <div className="bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full border border-slate-700">
+        <div className="p-6 border-b border-slate-700">
+          <h2 className="text-2xl font-bold text-white">Start Impersonation</h2>
+          <p className="text-slate-400 text-sm mt-1">
+            You are about to impersonate {user.full_name || user.email}
+          </p>
+        </div>
+
+        <div className="p-6">
+          <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg mb-4">
+            <div className="flex gap-3">
+              <Shield className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-amber-200">
+                <p className="font-medium mb-1">Important:</p>
+                <ul className="space-y-1 text-amber-200/80">
+                  <li>• You will see their dashboard and data</li>
+                  <li>• Actions you take will affect their account</li>
+                  <li>• This session is logged for security</li>
+                  <li>• You can exit anytime using the banner</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Reason for Impersonation (Optional)
+              </label>
+              <textarea
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="e.g., Testing course creation workflow, debugging enrollment issue..."
+                rows={3}
+                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-6 border-t border-slate-700 mt-6">
+            <Button variant="secondary" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button onClick={handleConfirm} className="bg-amber-600 hover:bg-amber-700">
+              <TestTube2 className="w-4 h-4 mr-2" />
+              Start Testing
             </Button>
           </div>
         </div>
