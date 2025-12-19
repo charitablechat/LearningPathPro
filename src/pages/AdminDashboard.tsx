@@ -73,7 +73,11 @@ export function AdminDashboard({ onViewCourse }: AdminDashboardProps) {
         new_role: newRole,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('RPC error updating user role:', error);
+        showToast(`Permission error: ${error.message}`);
+        return;
+      }
 
       if (data && typeof data === 'object' && 'success' in data) {
         if (data.success) {
@@ -81,11 +85,16 @@ export function AdminDashboard({ onViewCourse }: AdminDashboardProps) {
           await loadData();
           setEditingUser(null);
         } else {
-          showToast(data.error || 'Failed to update user role');
+          const errorMsg = data.error || 'Failed to update user role';
+          console.error('Function returned error:', errorMsg);
+          showToast(errorMsg);
         }
+      } else {
+        console.error('Unexpected response format:', data);
+        showToast('Unexpected response from server');
       }
     } catch (error: any) {
-      console.error('Error updating user role:', error);
+      console.error('Exception updating user role:', error);
       showToast(error.message || 'Failed to update user role');
     }
   };
