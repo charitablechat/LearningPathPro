@@ -148,10 +148,10 @@ export function AdminSubscriptionDashboard() {
             <div className="flex-1">
               <h3 className="text-xl font-bold text-white mb-2">Free Trial Active</h3>
               <p className="text-gray-300 mb-4">
-                You have {daysLeft} days remaining in your 14-day free trial. Subscribe now to continue using the platform after your trial ends.
+                You have {daysLeft} days remaining in your 14-day free trial. Contact us to set up a subscription plan before your trial ends.
               </p>
-              <Button>
-                Choose a Plan
+              <Button onClick={() => window.location.href = '/contact'}>
+                Contact Us to Subscribe
               </Button>
             </div>
           </div>
@@ -167,9 +167,9 @@ export function AdminSubscriptionDashboard() {
           <div className="text-center py-12">
             <CreditCard className="w-16 h-16 text-gray-500 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-white mb-2">No Active Subscription</h3>
-            <p className="text-gray-400 mb-4">Subscribe to a plan to continue using the platform</p>
-            <Button>
-              View Plans
+            <p className="text-gray-400 mb-4">Contact us to set up a subscription plan</p>
+            <Button onClick={() => window.location.href = '/contact'}>
+              Contact Us
             </Button>
           </div>
         </Card>
@@ -239,14 +239,25 @@ export function AdminSubscriptionDashboard() {
             )}
 
             <div className="flex gap-3 pt-4">
-              <Button variant="outline" className="flex-1">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => window.location.href = '/contact'}
+              >
                 Change Plan
               </Button>
-              <Button variant="outline" className="flex-1">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => window.location.href = '/contact'}
+              >
                 <Download className="w-4 h-4 mr-2" />
                 Invoices
               </Button>
             </div>
+            <p className="text-xs text-slate-400 text-center mt-3">
+              Contact us to make changes to your subscription
+            </p>
           </div>
         </Card>
 

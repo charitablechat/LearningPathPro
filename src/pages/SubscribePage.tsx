@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useOrganization } from '../contexts/OrganizationContext';
 import { getSubscriptionPlans, SubscriptionPlan } from '../lib/organization';
-import { createCheckoutSession, redirectToCheckout } from '../lib/stripe';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { navigateTo } from '../lib/router';
+import { AlertCircle } from 'lucide-react';
 
 export function SubscribePage() {
   const { user } = useAuth();
@@ -13,8 +13,6 @@ export function SubscribePage() {
   const [plan, setPlan] = useState<SubscriptionPlan | null>(null);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [loading, setLoading] = useState(true);
-  const [processing, setProcessing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -45,42 +43,6 @@ export function SubscribePage() {
 
     fetchPlan();
   }, []);
-
-  const handleSubscribe = async () => {
-    if (!plan || !currentOrganization || !user) {
-      setError('Missing required information');
-      return;
-    }
-
-    const priceId = billingCycle === 'monthly'
-      ? plan.stripe_monthly_price_id
-      : plan.stripe_yearly_price_id;
-
-    if (!priceId) {
-      setError('Price ID not configured for this plan');
-      return;
-    }
-
-    setProcessing(true);
-    setError(null);
-
-    try {
-      const sessionId = await createCheckoutSession({
-        priceId,
-        organizationId: currentOrganization.id,
-        planId: plan.id,
-        billingCycle,
-        successUrl: `${window.location.origin}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
-        cancelUrl: `${window.location.origin}/pricing`,
-      });
-
-      await redirectToCheckout(sessionId);
-    } catch (err) {
-      console.error('Error creating checkout session:', err);
-      setError(err instanceof Error ? err.message : 'Failed to start checkout');
-      setProcessing(false);
-    }
-  };
 
   const formatPrice = (cents: number) => {
     return (cents / 100).toLocaleString('en-US', {
@@ -150,70 +112,44 @@ export function SubscribePage() {
             </div>
           </div>
 
-          {error && (
-            <div className="mb-6 p-4 bg-red-500/10 border border-red-500 rounded-lg">
-              <p className="text-red-400 text-sm">{error}</p>
+          <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500 rounded-lg">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-blue-300 font-medium mb-1">Payment Processing Coming Soon</p>
+                <p className="text-blue-400/80 text-sm">
+                  Online payment processing is currently being set up. Please contact us to activate this plan for your organization.
+                </p>
+              </div>
             </div>
-          )}
+          </div>
 
           <div className="flex gap-4">
             <Button
               variant="secondary"
               onClick={() => navigateTo('/pricing')}
-              disabled={processing}
               className="flex-1"
             >
-              Cancel
+              Back to Pricing
             </Button>
             <Button
-              onClick={handleSubscribe}
-              disabled={processing}
+              onClick={() => navigateTo('/contact')}
               className="flex-1"
             >
-              {processing ? 'Processing...' : 'Continue to Payment'}
+              Contact Us
             </Button>
           </div>
         </Card>
 
-        <div className="text-center space-y-3">
-          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
-            <h3 className="text-sm font-semibold text-white mb-2">Payment Processing Notice</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              Your payment will be securely processed by Stripe, our payment processor. Stripe is PCI-DSS compliant
-              and uses industry-standard encryption. We do not store your credit card information on our servers.
-              For more information, see{' '}
-              <a
-                href="https://stripe.com/privacy"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-400 hover:text-blue-300 underline"
-              >
-                Stripe's Privacy Policy
-              </a>.
-            </p>
-          </div>
-
-          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
-            <h3 className="text-sm font-semibold text-white mb-2">Subscription Terms</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              This is a recurring subscription that will automatically renew at the end of each billing period.
-              You can cancel anytime from your account settings. Cancellations take effect at the end of the
-              current billing period. See our{' '}
-              <a href="/refunds" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">
-                Refund Policy
-              </a>{' '}
-              for details on refunds.
-            </p>
-          </div>
-
+        <div className="text-center">
           <p className="text-xs text-slate-400">
-            By continuing, you agree to our{' '}
-            <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">
-              Terms of Service
+            Questions about this plan? Visit our{' '}
+            <a href="/contact" className="text-blue-400 hover:text-blue-300 underline">
+              Contact Page
             </a>{' '}
-            and{' '}
-            <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">
-              Privacy Policy
+            or check out the{' '}
+            <a href="/faq" className="text-blue-400 hover:text-blue-300 underline">
+              FAQ
             </a>.
           </p>
         </div>
