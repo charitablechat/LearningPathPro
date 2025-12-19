@@ -319,6 +319,32 @@ export async function checkFeatureLimit(
   };
 }
 
+export async function deleteOrganization(organizationId: string): Promise<boolean> {
+  try {
+    const { data, error } = await supabase.rpc('delete_organization_safely', {
+      org_id: organizationId,
+    });
+
+    if (error) {
+      logger.error('Error deleting organization', error);
+      return false;
+    }
+
+    if (data && typeof data === 'object' && 'success' in data) {
+      if (!data.success) {
+        logger.error('Failed to delete organization', { error: data.error });
+        return false;
+      }
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    logger.error('Exception deleting organization', error);
+    return false;
+  }
+}
+
 export function slugify(text: string): string {
   return text
     .toLowerCase()

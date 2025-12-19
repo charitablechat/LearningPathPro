@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Shield, Building2, Users, CreditCard, TrendingUp, Search, UserCog, Tag, CheckCircle, XCircle, UserPlus, TestTube2 } from 'lucide-react';
+import { Shield, Building2, Users, CreditCard, TrendingUp, Search, UserCog, Tag, CheckCircle, XCircle, UserPlus, TestTube2, Edit2, Trash2, Plus } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { Card } from '../components/Card';
 import { Input } from '../components/Input';
@@ -7,6 +7,7 @@ import { Button } from '../components/Button';
 import { supabase, Profile, UserRole } from '../lib/supabase';
 import { useToast } from '../hooks/useToast';
 import { navigateTo } from '../lib/router';
+import { createOrganization, updateOrganization, deleteOrganization, slugify, Organization } from '../lib/organization';
 
 type TabView = 'overview' | 'users' | 'organizations' | 'subscriptions' | 'promos' | 'superadmins' | 'role-testing';
 
@@ -336,12 +337,27 @@ function OverviewTab({ stats, organizations }: any) {
 }
 
 function OrganizationsTab({ organizations, searchQuery, setSearchQuery, loading, fetchData }: any) {
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedOrg, setSelectedOrg] = useState<any>(null);
+
   const filteredOrgs = organizations.filter(
     (org: any) =>
       org.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       org.slug.toLowerCase().includes(searchQuery.toLowerCase()) ||
       org.profiles?.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleEdit = (org: any) => {
+    setSelectedOrg(org);
+    setShowEditModal(true);
+  };
+
+  const handleDelete = (org: any) => {
+    setSelectedOrg(org);
+    setShowDeleteModal(true);
+  };
 
   const getStatusBadge = (status: string) => {
     const statusColors: Record<string, string> = {
@@ -372,24 +388,29 @@ function OrganizationsTab({ organizations, searchQuery, setSearchQuery, loading,
   };
 
   return (
-    <Card className="p-6 bg-slate-800 border-slate-700">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-white">All Organizations</h2>
-        <div className="flex items-center space-x-3">
-          <div className="relative">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-            <Input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search organizations..."
-              className="pl-10 w-64 bg-slate-700 border-slate-600 text-white"
-            />
+    <>
+      <Card className="p-6 bg-slate-800 border-slate-700">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-white">All Organizations</h2>
+          <div className="flex items-center space-x-3">
+            <div className="relative">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search organizations..."
+                className="pl-10 w-64 bg-slate-700 border-slate-600 text-white"
+              />
+            </div>
+            <Button onClick={fetchData} variant="outline" size="sm">
+              Refresh
+            </Button>
+            <Button onClick={() => setShowCreateModal(true)} className="bg-green-600 hover:bg-green-700">
+              <Plus className="w-4 h-4 mr-2" />
+              Create Organization
+            </Button>
           </div>
-          <Button onClick={fetchData} variant="outline" size="sm">
-            Refresh
-          </Button>
         </div>
-      </div>
 
       {loading ? (
         <div className="text-center py-12">
@@ -410,6 +431,7 @@ function OrganizationsTab({ organizations, searchQuery, setSearchQuery, loading,
                 <th className="text-left py-3 px-4 text-slate-300 font-semibold">Status</th>
                 <th className="text-left py-3 px-4 text-slate-300 font-semibold">Plan</th>
                 <th className="text-left py-3 px-4 text-slate-300 font-semibold">Created</th>
+                <th className="text-right py-3 px-4 text-slate-300 font-semibold">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -438,13 +460,74 @@ function OrganizationsTab({ organizations, searchQuery, setSearchQuery, loading,
                   <td className="py-4 px-4">
                     <div className="text-slate-300">{formatDate(org.created_at)}</div>
                   </td>
+                  <td className="py-4 px-4">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleEdit(org)}
+                        className="text-blue-400 border-blue-500/50 hover:bg-blue-900/20"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDelete(org)}
+                        className="text-red-400 border-red-500/50 hover:bg-red-900/20"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       )}
-    </Card>
+      </Card>
+
+      {showCreateModal && (
+        <CreateOrganizationModal
+          onClose={() => setShowCreateModal(false)}
+          onSuccess={() => {
+            setShowCreateModal(false);
+            fetchData();
+          }}
+        />
+      )}
+
+      {showEditModal && selectedOrg && (
+        <EditOrganizationModal
+          organization={selectedOrg}
+          onClose={() => {
+            setShowEditModal(false);
+            setSelectedOrg(null);
+          }}
+          onSuccess={() => {
+            setShowEditModal(false);
+            setSelectedOrg(null);
+            fetchData();
+          }}
+        />
+      )}
+
+      {showDeleteModal && selectedOrg && (
+        <DeleteOrganizationModal
+          organization={selectedOrg}
+          onClose={() => {
+            setShowDeleteModal(false);
+            setSelectedOrg(null);
+          }}
+          onSuccess={() => {
+            setShowDeleteModal(false);
+            setSelectedOrg(null);
+            fetchData();
+          }}
+        />
+      )}
+    </>
   );
 }
 
@@ -1339,6 +1422,485 @@ function ImpersonateModal({
             <Button onClick={handleConfirm} className="bg-amber-600 hover:bg-amber-700">
               <TestTube2 className="w-4 h-4 mr-2" />
               Start Testing
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CreateOrganizationModal({ onClose, onSuccess }: any) {
+  const [name, setName] = useState('');
+  const [slug, setSlug] = useState('');
+  const [ownerId, setOwnerId] = useState('');
+  const [primaryColor, setPrimaryColor] = useState('#3B82F6');
+  const [secondaryColor, setSecondaryColor] = useState('#1E40AF');
+  const [users, setUsers] = useState<Profile[]>([]);
+  const [loading, setLoading] = useState(false);
+  const { success: showToast, error: showError } = useToast();
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, email, full_name')
+      .order('email');
+    if (data) {
+      setUsers(data);
+    }
+  };
+
+  const handleNameChange = (newName: string) => {
+    setName(newName);
+    setSlug(slugify(newName));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const org = await createOrganization({
+        name,
+        slug,
+        owner_id: ownerId,
+        primary_color: primaryColor,
+        secondary_color: secondaryColor,
+      });
+
+      if (org) {
+        await supabase
+          .from('profiles')
+          .update({ organization_id: org.id, role: 'admin' })
+          .eq('id', ownerId);
+
+        showToast('Organization created successfully');
+        onSuccess();
+      } else {
+        showError('Failed to create organization');
+      }
+    } catch (error: any) {
+      showError(error.message || 'Failed to create organization');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+      <div className="bg-slate-800 rounded-2xl shadow-2xl max-w-2xl w-full border border-slate-700 max-h-[90vh] overflow-y-auto">
+        <div className="p-6 border-b border-slate-700">
+          <h2 className="text-2xl font-bold text-white">Create New Organization</h2>
+          <p className="text-slate-400 text-sm mt-1">Set up a new organization on the platform</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Organization Name
+            </label>
+            <Input
+              type="text"
+              value={name}
+              onChange={(e) => handleNameChange(e.target.value)}
+              placeholder="Acme Corporation"
+              required
+              className="bg-slate-700 border-slate-600 text-white"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Slug (URL identifier)
+            </label>
+            <Input
+              type="text"
+              value={slug}
+              onChange={(e) => setSlug(slugify(e.target.value))}
+              placeholder="acme-corporation"
+              required
+              className="bg-slate-700 border-slate-600 text-white"
+            />
+            <p className="text-slate-400 text-xs mt-1">
+              Used in URLs and must be unique
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Owner
+            </label>
+            <select
+              value={ownerId}
+              onChange={(e) => setOwnerId(e.target.value)}
+              className="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            >
+              <option value="">Select an owner...</option>
+              {users.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.full_name || user.email} ({user.email})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Primary Color
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="color"
+                  value={primaryColor}
+                  onChange={(e) => setPrimaryColor(e.target.value)}
+                  className="h-10 w-20 rounded border border-slate-600 cursor-pointer"
+                />
+                <Input
+                  type="text"
+                  value={primaryColor}
+                  onChange={(e) => setPrimaryColor(e.target.value)}
+                  className="flex-1 bg-slate-700 border-slate-600 text-white"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Secondary Color
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="color"
+                  value={secondaryColor}
+                  onChange={(e) => setSecondaryColor(e.target.value)}
+                  className="h-10 w-20 rounded border border-slate-600 cursor-pointer"
+                />
+                <Input
+                  type="text"
+                  value={secondaryColor}
+                  onChange={(e) => setSecondaryColor(e.target.value)}
+                  className="flex-1 bg-slate-700 border-slate-600 text-white"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-700">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={onClose}
+              disabled={loading}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={loading}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {loading ? 'Creating...' : 'Create Organization'}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function EditOrganizationModal({ organization, onClose, onSuccess }: any) {
+  const [name, setName] = useState(organization.name);
+  const [slug, setSlug] = useState(organization.slug);
+  const [ownerId, setOwnerId] = useState(organization.owner_id);
+  const [primaryColor, setPrimaryColor] = useState(organization.primary_color);
+  const [secondaryColor, setSecondaryColor] = useState(organization.secondary_color);
+  const [subscriptionStatus, setSubscriptionStatus] = useState(organization.subscription_status);
+  const [users, setUsers] = useState<Profile[]>([]);
+  const [loading, setLoading] = useState(false);
+  const { success: showToast, error: showError } = useToast();
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, email, full_name')
+      .order('email');
+    if (data) {
+      setUsers(data);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const updated = await updateOrganization(organization.id, {
+        name,
+        slug,
+        owner_id: ownerId,
+        primary_color: primaryColor,
+        secondary_color: secondaryColor,
+        subscription_status: subscriptionStatus as any,
+      });
+
+      if (updated) {
+        if (ownerId !== organization.owner_id) {
+          await supabase
+            .from('profiles')
+            .update({ organization_id: null })
+            .eq('id', organization.owner_id);
+
+          await supabase
+            .from('profiles')
+            .update({ organization_id: organization.id, role: 'admin' })
+            .eq('id', ownerId);
+        }
+
+        showToast('Organization updated successfully');
+        onSuccess();
+      } else {
+        showError('Failed to update organization');
+      }
+    } catch (error: any) {
+      showError(error.message || 'Failed to update organization');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+      <div className="bg-slate-800 rounded-2xl shadow-2xl max-w-2xl w-full border border-slate-700 max-h-[90vh] overflow-y-auto">
+        <div className="p-6 border-b border-slate-700">
+          <h2 className="text-2xl font-bold text-white">Edit Organization</h2>
+          <p className="text-slate-400 text-sm mt-1">Update organization settings</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Organization Name
+            </label>
+            <Input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Acme Corporation"
+              required
+              className="bg-slate-700 border-slate-600 text-white"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Slug (URL identifier)
+            </label>
+            <Input
+              type="text"
+              value={slug}
+              onChange={(e) => setSlug(slugify(e.target.value))}
+              placeholder="acme-corporation"
+              required
+              className="bg-slate-700 border-slate-600 text-white"
+            />
+            <p className="text-slate-400 text-xs mt-1">
+              Used in URLs and must be unique
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Owner
+            </label>
+            <select
+              value={ownerId}
+              onChange={(e) => setOwnerId(e.target.value)}
+              className="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            >
+              <option value="">Select an owner...</option>
+              {users.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.full_name || user.email} ({user.email})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Subscription Status
+            </label>
+            <select
+              value={subscriptionStatus}
+              onChange={(e) => setSubscriptionStatus(e.target.value)}
+              className="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            >
+              <option value="trial">Trial</option>
+              <option value="active">Active</option>
+              <option value="past_due">Past Due</option>
+              <option value="canceled">Canceled</option>
+              <option value="lifetime">Lifetime</option>
+            </select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Primary Color
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="color"
+                  value={primaryColor}
+                  onChange={(e) => setPrimaryColor(e.target.value)}
+                  className="h-10 w-20 rounded border border-slate-600 cursor-pointer"
+                />
+                <Input
+                  type="text"
+                  value={primaryColor}
+                  onChange={(e) => setPrimaryColor(e.target.value)}
+                  className="flex-1 bg-slate-700 border-slate-600 text-white"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Secondary Color
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="color"
+                  value={secondaryColor}
+                  onChange={(e) => setSecondaryColor(e.target.value)}
+                  className="h-10 w-20 rounded border border-slate-600 cursor-pointer"
+                />
+                <Input
+                  type="text"
+                  value={secondaryColor}
+                  onChange={(e) => setSecondaryColor(e.target.value)}
+                  className="flex-1 bg-slate-700 border-slate-600 text-white"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-700">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={onClose}
+              disabled={loading}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={loading}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {loading ? 'Updating...' : 'Update Organization'}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function DeleteOrganizationModal({ organization, onClose, onSuccess }: any) {
+  const [confirmText, setConfirmText] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { success: showToast, error: showError } = useToast();
+
+  const handleDelete = async () => {
+    if (confirmText !== organization.name) {
+      showError('Organization name does not match');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const success = await deleteOrganization(organization.id);
+
+      if (success) {
+        showToast('Organization deleted successfully');
+        onSuccess();
+      } else {
+        showError('Failed to delete organization');
+      }
+    } catch (error: any) {
+      showError(error.message || 'Failed to delete organization');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+      <div className="bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full border border-slate-700">
+        <div className="p-6 border-b border-slate-700">
+          <h2 className="text-2xl font-bold text-white">Delete Organization</h2>
+          <p className="text-slate-400 text-sm mt-1">
+            This action cannot be undone
+          </p>
+        </div>
+
+        <div className="p-6">
+          <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg mb-4">
+            <div className="flex gap-3">
+              <Shield className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-red-200">
+                <p className="font-medium mb-1">Warning:</p>
+                <ul className="space-y-1 text-red-200/80">
+                  <li>• All courses under this organization will be deleted</li>
+                  <li>• All user associations will be removed</li>
+                  <li>• All enrollments and progress will be lost</li>
+                  <li>• All subscriptions will be canceled</li>
+                  <li>• This action is permanent and cannot be undone</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Type the organization name to confirm: <span className="text-white font-bold">{organization.name}</span>
+              </label>
+              <Input
+                type="text"
+                value={confirmText}
+                onChange={(e) => setConfirmText(e.target.value)}
+                placeholder={organization.name}
+                className="bg-slate-700 border-slate-600 text-white"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-6 border-t border-slate-700 mt-6">
+            <Button variant="secondary" onClick={onClose} disabled={loading}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleDelete}
+              disabled={confirmText !== organization.name || loading}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {loading ? 'Deleting...' : 'Delete Organization'}
             </Button>
           </div>
         </div>
