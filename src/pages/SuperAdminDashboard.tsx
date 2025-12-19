@@ -1064,7 +1064,7 @@ function RoleTestingTab({ users }: { users: Profile[] }) {
   const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
   const { success: showToast, error: showError } = useToast();
 
-  const nonSuperAdminUsers = users.filter((u) => !u.is_super_admin && u.organization_id);
+  const nonSuperAdminUsers = users.filter((u) => !u.is_super_admin);
 
   const filteredUsers = nonSuperAdminUsers.filter((user) => {
     const matchesSearch =
