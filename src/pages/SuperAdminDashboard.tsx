@@ -454,7 +454,7 @@ function UsersTab({ users, searchQuery, setSearchQuery, loading, onPromoteToSupe
     if (!selectedUser) return;
 
     try {
-      const { data, error } = await supabase.rpc('update_user_role', {
+      const { data, error } = await supabase.rpc('update_organization_user_role', {
         target_user_id: selectedUser.id,
         new_role: newRole,
       });
