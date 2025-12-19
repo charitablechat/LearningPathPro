@@ -209,6 +209,7 @@ export function SuperAdminDashboard() {
             setSearchQuery={setSearchQuery}
             loading={loading}
             onPromoteToSuperAdmin={promoteToSuperAdmin}
+            currentUserId={profile?.id}
           />
         )}
         {currentTab === 'superadmins' && (
@@ -438,7 +439,7 @@ function OrganizationsTab({ organizations, searchQuery, setSearchQuery, loading,
   );
 }
 
-function UsersTab({ users, searchQuery, setSearchQuery, loading, onPromoteToSuperAdmin }: any) {
+function UsersTab({ users, searchQuery, setSearchQuery, loading, onPromoteToSuperAdmin, currentUserId }: any) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showRoleChangeModal, setShowRoleChangeModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
@@ -530,15 +531,24 @@ function UsersTab({ users, searchQuery, setSearchQuery, loading, onPromoteToSupe
                     <div className="text-slate-300">{user.email}</div>
                   </td>
                   <td className="py-4 px-4">
-                    <button
-                      onClick={() => {
-                        setSelectedUser(user);
-                        setShowRoleChangeModal(true);
-                      }}
-                      className="px-2 py-1 bg-blue-600/20 text-blue-400 rounded-full text-xs font-medium capitalize hover:bg-blue-600/30 transition-colors"
-                    >
-                      {user.role}
-                    </button>
+                    {user.id === currentUserId ? (
+                      <span
+                        className="px-2 py-1 bg-slate-600/20 text-slate-400 rounded-full text-xs font-medium capitalize cursor-not-allowed"
+                        title="You cannot change your own role"
+                      >
+                        {user.role}
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setSelectedUser(user);
+                          setShowRoleChangeModal(true);
+                        }}
+                        className="px-2 py-1 bg-blue-600/20 text-blue-400 rounded-full text-xs font-medium capitalize hover:bg-blue-600/30 transition-colors"
+                      >
+                        {user.role}
+                      </button>
+                    )}
                   </td>
                   <td className="py-4 px-4">
                     {user.is_super_admin ? (
